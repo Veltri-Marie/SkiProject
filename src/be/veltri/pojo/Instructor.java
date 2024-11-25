@@ -88,6 +88,21 @@ public class Instructor extends Person {
         return instructorDAO.getNextIdDAO(); 
     }
     
+    public static Instructor find(int id, Connection conn) {
+        InstructorDAO instructorDAO = new InstructorDAO(conn);
+        return instructorDAO.findDAO(id);
+    }
+
+    public static List<Instructor> findByLastName(Connection conn, String lastname) {
+        InstructorDAO instructorDAO = new InstructorDAO(conn);
+        return instructorDAO.findByLastnameDAO(lastname);
+    }
+
+    public static List<Instructor> findAll(Connection conn) {
+        InstructorDAO instructorDAO = new InstructorDAO(conn);
+        return instructorDAO.findAllDAO();
+    }
+    
     public void addAccreditation(Accreditation accreditation) {
     	if (accreditations == null) {
 			accreditations = new ArrayList<>();
