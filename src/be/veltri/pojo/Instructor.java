@@ -81,14 +81,19 @@ public class Instructor extends Person {
         return instructorDAO.createDAO(this); 
     }
     
+    public static int getNextId(Connection conn) {
+        InstructorDAO instructorDAO = new InstructorDAO(conn);
+        return instructorDAO.getNextIdDAO(); 
+    }
+    
     public boolean update(Connection conn) {
         InstructorDAO instructorDAO = new InstructorDAO(conn);
         return instructorDAO.updateDAO(this);
     }
     
-    public static int getNextId(Connection conn) {
+    public boolean delete(Connection conn) {
         InstructorDAO instructorDAO = new InstructorDAO(conn);
-        return instructorDAO.getNextIdDAO(); 
+        return instructorDAO.deleteDAO(this);
     }
     
     public static Instructor find(int id, Connection conn) {

@@ -312,7 +312,7 @@ private void updateInstructor() {
         }
 
         int instructorId = (int) tableInstructor.getValueAt(selectedRow, 0);
-        Instructor instructor = new Instructor();
+        Instructor instructor = Instructor.find(instructorId, conn);
         instructor.setId(instructorId);
         String firstName = tfInstructorFirstName.getText();
         String lastName = tfInstructorLastName.getText();
@@ -337,8 +337,28 @@ private void updateInstructor() {
         }
     }
     
-    private void deleteInstructor() {
-    }
+	private void deleteInstructor() {
+	    int selectedRow = tableInstructor.getSelectedRow();
+	    if (selectedRow == -1) {
+	        JOptionPane.showMessageDialog(this, "Please select an instructor to delete.", "Error", JOptionPane.ERROR_MESSAGE);
+	        return;
+	    }
+	
+	    int instructorId = (int) tableInstructor.getValueAt(selectedRow, 0);
+	    Instructor instructor = new Instructor();
+	    instructor.setId(instructorId);
+	
+	    int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this instructor?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+	    if (response == JOptionPane.YES_OPTION) {
+	        boolean deleted = instructor.delete(conn);
+	        if (deleted) {
+	            ((DefaultTableModel) tableInstructor.getModel()).removeRow(selectedRow);
+	            JOptionPane.showMessageDialog(this, "Instructor deleted successfully!");
+	        } else {
+	            JOptionPane.showMessageDialog(this, "Failed to delete instructor.");
+	        }
+	    }
+	}
     
     private void findInstructor() {
         String lastName = tfSearchInstructorLastName.getText();
