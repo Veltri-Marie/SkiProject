@@ -86,10 +86,36 @@ public class InstructorDAO extends DAO<Instructor> {
     }
     
     @Override
-    public boolean deleteDAO(Instructor obj)
-	{
-		return false;
-	}
+    public boolean deleteDAO(Instructor instructor) {
+        String deleteInstructorAccreditationSql = "DELETE FROM InstructorAccreditation WHERE id_instructor = ?";
+        String deleteInstructorSql = "DELETE FROM Instructor WHERE id_instructor = ?";
+        String deletePersonSql = "DELETE FROM Person WHERE id_Person = ?";
+
+        try (
+            PreparedStatement pstmtInstructorAccred = this.connect.prepareStatement(deleteInstructorAccreditationSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            PreparedStatement pstmtInstructor = this.connect.prepareStatement(deleteInstructorSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            PreparedStatement pstmtPerson = this.connect.prepareStatement(deletePersonSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
+        ) {
+            int personId = findPersonIdByInstructorId(instructor.getId());
+
+            if (personId == -1) {
+                System.err.println("No associated person found for instructor ID: " + instructor.getId());
+                return false;
+            }
+            pstmtInstructorAccred.setInt(1, instructor.getId());
+            pstmtInstructorAccred.executeUpdate();
+
+            pstmtInstructor.setInt(1, instructor.getId());
+            pstmtInstructor.executeUpdate();
+
+            pstmtPerson.setInt(1, personId);
+            return pstmtPerson.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error deleting instructor: " + e.getMessage());
+            return false;
+        }
+    }
     
     private int findPersonIdByInstructorId(int instructorId) {
         String sql = "SELECT id_Person FROM Instructor WHERE id_instructor = ?";
