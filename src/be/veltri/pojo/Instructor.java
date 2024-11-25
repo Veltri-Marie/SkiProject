@@ -4,9 +4,7 @@ import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.*;
 
-import be.veltri.dao.AccreditationDAO;
 import be.veltri.dao.InstructorDAO;
-import be.veltri.dao.LessonTypeDAO;
 
 public class Instructor extends Person {
     // ATTRIBUTES
@@ -83,6 +81,11 @@ public class Instructor extends Person {
         return instructorDAO.createDAO(this); 
     }
     
+    public boolean update(Connection conn) {
+        InstructorDAO instructorDAO = new InstructorDAO(conn);
+        return instructorDAO.updateDAO(this);
+    }
+    
     public static int getNextId(Connection conn) {
         InstructorDAO instructorDAO = new InstructorDAO(conn);
         return instructorDAO.getNextIdDAO(); 
@@ -102,6 +105,27 @@ public class Instructor extends Person {
         InstructorDAO instructorDAO = new InstructorDAO(conn);
         return instructorDAO.findAllDAO();
     }
+    
+public void addAccreditation(Connection conn, Accreditation accreditation) {
+		
+        if (accreditation != null && !accreditations.contains(accreditation)) {
+            accreditations.add(accreditation);
+            InstructorDAO instructorDAO = new InstructorDAO(conn);
+            instructorDAO.addAccreditationDAO(this, accreditation);
+        }
+    }
+    
+    public boolean removeAccreditation(Connection conn, Accreditation accreditation) 
+    {
+    	if (accreditation != null && accreditations.contains(accreditation)) {
+            accreditations.remove(accreditation);        
+            InstructorDAO instructorDAO = new InstructorDAO(conn);
+           
+            return instructorDAO.removeAccreditationDAO(this, accreditation);
+        } 
+        return false;
+    }
+
     
     public void addAccreditation(Accreditation accreditation) {
     	if (accreditations == null) {
