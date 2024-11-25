@@ -35,6 +35,7 @@ public class InstructorPanel extends JPanel {
     public InstructorPanel() {
         setLayout(null);
         initializeComponents();
+        loadInstructorsFromDB();
         loadAccreditationsFromDB();
     }
 
@@ -161,6 +162,30 @@ public class InstructorPanel extends JPanel {
         scrollPane.setBounds(10, 63, 557, 246);
         panelSearch.add(scrollPane);
         
+        tableInstructor.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                int selectedRow = tableInstructor.getSelectedRow();
+                if (selectedRow != -1) {
+                    listAccreditations.setVisible(false);
+                    scrollAccreditations.setVisible(false);
+
+                    int instructorId = (int) tableInstructor.getValueAt(selectedRow, 0);
+                    Instructor selectedInstructor = Instructor.find(instructorId, conn);
+
+                    if (selectedInstructor != null) {
+                        tfInstructorFirstName.setText(selectedInstructor.getFirstName());
+                        tfInstructorLastName.setText(selectedInstructor.getLastName());
+                        dateChooserBirthdate.setDate(Date.valueOf(selectedInstructor.getBirthdate()));
+                        dateChooserHireDate.setDate(Date.valueOf(selectedInstructor.getHireDate()));
+                    }
+                    
+                    btnManage.setBounds(141, 199, 96, 50);
+
+                    panelRegistration.add(btnManage);
+                    panelRegistration.setComponentZOrder(btnManage, 0);
+                }
+            }
+        });
     }
 
     private void clearFields() {
@@ -270,6 +295,53 @@ public class InstructorPanel extends JPanel {
     }
     
     private void findInstructor() {
+        String lastName = tfSearchInstructorLastName.getText();
+        List<Instructor> instructors = Instructor.findByLastName(conn, lastName);
+        DefaultTableModel model = (DefaultTableModel) tableInstructor.getModel();
+        model.setRowCount(0);
+        
+        
+        for (Instructor instructor : instructors) {
+        	StringBuilder formatAccreditations = new StringBuilder();
+            for (Accreditation accreditation : instructor.getAccreditations()) {
+                if (formatAccreditations.length() > 0) {
+                	formatAccreditations.append(", ");
+                }
+                formatAccreditations.append(accreditation.getName()); 
+            }
+            model.addRow(new Object[] {
+                instructor.getId(),
+                instructor.getFirstName() + " " + instructor.getLastName(),
+                instructor.getBirthdate(),
+                instructor.getHireDate(),
+                formatAccreditations.toString()
+            });
+        }
+    }
+    
+    private void loadInstructorsFromDB() {
+        List<Instructor> instructors = Instructor.findAll(conn);      
+        DefaultTableModel model = (DefaultTableModel) tableInstructor.getModel();
+        model.setRowCount(0);  
+
+        for (Instructor instructor : instructors) {
+            StringBuilder formatAccreditations = new StringBuilder();
+
+            for (Accreditation accreditation : instructor.getAccreditations()) {
+                if (formatAccreditations.length() > 0) {
+                    formatAccreditations.append(", ");
+                }
+                formatAccreditations.append(accreditation.getName()); 
+            }
+
+            model.addRow(new Object[] {
+                instructor.getId(),
+                instructor.getFirstName() + " " + instructor.getLastName(),
+                instructor.getBirthdate(),
+                instructor.getHireDate(), 
+                formatAccreditations.toString() 
+            });
+        }
     }
     
     private void loadAccreditationsFromDB() {

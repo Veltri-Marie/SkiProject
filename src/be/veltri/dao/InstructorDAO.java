@@ -96,16 +96,272 @@ public class InstructorDAO extends DAO<Instructor> {
     {
     	return false;
     }
-
-    @Override
-	public Instructor findDAO(int id)
-    {
-		return null;
-    }
     
     @Override
-    public List<Instructor> findAllDAO()
-    {
-    	return null;
+    public Instructor findDAO(int id) {
+        String sql = """
+    		    SELECT 
+			    I.id_instructor, 
+			    I.instructor_hireDate,
+			    P.firstName, 
+			    P.lastName, 
+			    P.Birthdate,
+			    LISTAGG(A.accreditation_name || ':' || A.id_accreditation, ', ') 
+			        WITHIN GROUP (ORDER BY A.id_accreditation) AS accreditation_data,
+			    LISTAGG(B.id_booking || ':' || B.reservation_date || ':' || B.insurance_opt, ',') 
+			        WITHIN GROUP (ORDER BY B.id_booking) AS bookings_list,
+			    LISTAGG(
+			        L.id_lesson || ';' || L.lessonDate || ';' || L.minBookings || ';' || 
+			        L.maxBookings || ';' || L.isCollective || ';' || L.nb_hours, '-'
+			    ) 
+			        WITHIN GROUP (ORDER BY L.id_lesson) AS lesson_list
+			FROM 
+			    Instructor I
+			INNER JOIN 
+			    Person P ON I.id_Person = P.id_Person
+			INNER JOIN 
+			    InstructorAccreditation IA ON I.id_instructor = IA.id_instructor
+			INNER JOIN 
+			    Accreditation A ON IA.id_accreditation = A.id_accreditation
+			LEFT JOIN 
+			    Lesson L ON I.id_instructor = L.id_instructor
+			LEFT JOIN 
+			    Booking B ON L.id_lesson = B.id_lesson
+			WHERE I.id_instructor = ?
+			GROUP BY 
+			    I.id_instructor, 
+			    I.instructor_hireDate, 
+			    P.firstName, 
+			    P.lastName, 
+			    P.Birthdate
+			    """;
+
+        try (PreparedStatement pstmt = this.connect.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+            pstmt.setInt(1, id);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    Instructor instructor = setInstructorDAO(rs);
+                    return instructor;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error finding instructor by ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+
+
+    public List<Instructor> findByLastnameDAO(String lastname) {
+        List<Instructor> instructors = new ArrayList<>();
+        String sql = """
+        	    SELECT 
+        	        I.id_instructor, 
+        	        I.instructor_hireDate,
+        	        P.firstName, 
+        	        P.lastName, 
+        	        P.Birthdate,
+        	        LISTAGG(A.accreditation_name || ':' || A.id_accreditation, ', ') 
+        	            WITHIN GROUP (ORDER BY A.id_accreditation) AS accreditation_data,
+        	        LISTAGG(B.id_booking || ':' || B.reservation_date || ':' || B.insurance_opt, ',') 
+        	            WITHIN GROUP (ORDER BY B.id_booking) AS bookings_list,
+        	        LISTAGG(
+        	            L.id_lesson || ';' || L.lessonDate || ';' || L.minBookings || ';' || 
+        	            L.maxBookings || ';' || L.isCollective || ';' || L.nb_hours, '-'
+        	        ) 
+        	            WITHIN GROUP (ORDER BY L.id_lesson) AS lesson_list
+        	    FROM 
+        	        Instructor I
+        	    INNER JOIN 
+        	        Person P ON I.id_Person = P.id_Person
+        	    INNER JOIN 
+        	        InstructorAccreditation IA ON I.id_instructor = IA.id_instructor
+        	    INNER JOIN 
+        	        Accreditation A ON IA.id_accreditation = A.id_accreditation
+        	    LEFT JOIN 
+        	        Lesson L ON I.id_instructor = L.id_instructor
+        	    LEFT JOIN 
+        	        Booking B ON L.id_lesson = B.id_lesson
+        	    WHERE P.Lastname LIKE ?
+        	    GROUP BY 
+        	        I.id_instructor, 
+        	        I.instructor_hireDate, 
+        	        P.firstName, 
+        	        P.lastName, 
+        	        P.Birthdate
+        	""";
+        try (PreparedStatement pstmt = this.connect.prepareStatement(sql)) {
+            pstmt.setString(1, "%" + lastname + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+					Instructor instructor = setInstructorDAO(rs);
+					instructors.add(instructor);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error finding instructors by last name: " + e.getMessage());
+        }
+        return instructors;
+    }
+   
+    @Override
+    public List<Instructor> findAllDAO() {
+        List<Instructor> instructors = new ArrayList<>();
+        String sql = """
+        		SELECT 
+			    I.id_instructor, 
+			    I.instructor_hireDate,
+			    P.firstName, 
+			    P.lastName, 
+			    P.Birthdate,
+			    LISTAGG(A.accreditation_name || ':' || A.id_accreditation, ', ') 
+			        WITHIN GROUP (ORDER BY A.id_accreditation) AS accreditation_data,
+			    LISTAGG(B.id_booking || ':' || B.reservation_date || ':' || B.insurance_opt, ',') 
+			        WITHIN GROUP (ORDER BY B.id_booking) AS bookings_list,
+			    LISTAGG(
+			        L.id_lesson || ';' || L.lessonDate || ';' || L.minBookings || ';' || 
+			        L.maxBookings || ';' || L.isCollective || ';' || L.nb_hours, '-'
+			    ) 
+			        WITHIN GROUP (ORDER BY L.id_lesson) AS lesson_list
+			FROM 
+			    Instructor I
+			INNER JOIN 
+			    Person P ON I.id_Person = P.id_Person
+			INNER JOIN 
+			    InstructorAccreditation IA ON I.id_instructor = IA.id_instructor
+			INNER JOIN 
+			    Accreditation A ON IA.id_accreditation = A.id_accreditation
+			LEFT JOIN 
+			    Lesson L ON I.id_instructor = L.id_instructor
+			LEFT JOIN 
+			    Booking B ON L.id_lesson = B.id_lesson
+			GROUP BY 
+			    I.id_instructor, 
+			    I.instructor_hireDate, 
+			    P.firstName, 
+			    P.lastName, 
+			    P.Birthdate
+        	""";
+
+
+
+        try (Statement stmt = this.connect.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                instructors.add(setInstructorDAO(rs)); 
+            }
+        } catch (SQLException e) {
+            System.err.println("Error finding all instructors: " + e.getMessage());
+        }
+        return instructors;
+    }
+    
+    private Instructor setInstructorDAO(ResultSet rs) throws SQLException {
+        String accreditationData = rs.getString("accreditation_data");
+        Accreditation firstAccreditation = null;
+
+        if (accreditationData != null && !accreditationData.isEmpty()) {
+            String[] accreditations = accreditationData.split(", ");
+            if (accreditations.length > 0) {
+                String[] firstAcc = accreditations[0].split(";");
+                if (firstAcc.length == 2) {
+                    int firstAccId = Integer.parseInt(firstAcc[1].trim());
+                    String firstAccName = firstAcc[0].trim();
+                    firstAccreditation = new Accreditation(firstAccId, firstAccName);
+                }
+            }
+        }
+
+        Instructor instructor = new Instructor(
+            rs.getInt("id_instructor"),
+            rs.getString("firstName"),
+            rs.getString("lastName"),
+            rs.getDate("Birthdate").toLocalDate(),
+            rs.getDate("instructor_hireDate").toLocalDate(),
+            firstAccreditation
+        );
+
+        if (accreditationData != null && !accreditationData.isEmpty()) {
+            String[] accreditations = accreditationData.split(", ");
+            for (String accreditationEntry : accreditations) {
+                String[] parts = accreditationEntry.split(":");
+                if (parts.length == 2) {
+                    int accId = Integer.parseInt(parts[1].trim());
+                    String accName = parts[0].trim();
+                    Accreditation accreditation = new Accreditation(accId, accName);
+
+                    if (!instructor.getAccreditations().contains(accreditation)) {
+                        instructor.addAccreditation(accreditation);
+                    }
+                }
+            }
+        }
+
+        String bookingsList = rs.getString("bookings_list");
+        if (bookingsList != null && !bookingsList.isEmpty()) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yy");
+            String[] bookingEntries = bookingsList.split(",");
+            for (String entry : bookingEntries) {
+                String[] parts = entry.split(":");
+                if (parts.length == 3) {
+                    int bookingId = Integer.parseInt(parts[0]);
+                    LocalDate reservationDate = LocalDate.parse(parts[1], formatter);
+                    boolean insuranceOpt = Boolean.parseBoolean(parts[2]);
+
+                    Booking booking = new Booking(
+                        bookingId,
+                        reservationDate,
+                        new Lesson(),
+                        instructor,
+                        new Period(),
+                        new Skier(),
+                        insuranceOpt
+                    );
+
+                    if (booking != null && !instructor.getBookings().contains(booking)) {
+                        instructor.addBooking(booking);
+                    }
+                }
+            }
+        }
+
+        String lessonList = rs.getString("lesson_list");
+        if (lessonList != null && !lessonList.isEmpty()) {
+            String[] lessonEntries = lessonList.split("-");
+            for (String entry : lessonEntries) {
+                String[] parts = entry.split(";");
+                if (parts.length == 6) {
+                        int lessonId = Integer.parseInt(parts[0]);
+                        String dateTime = parts[1].split(" ")[0]; 
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yy");
+                        LocalDate lessonDate = LocalDate.parse(dateTime, formatter);
+                        int minBookings = Integer.parseInt(parts[2]);
+                        int maxBookings = Integer.parseInt(parts[3]);
+                        boolean isCollective = Integer.parseInt(parts[4]) == 1;
+                        int nbHours = Integer.parseInt(parts[5]);
+
+                        Lesson lesson = new Lesson(
+                            lessonId,
+                            lessonDate,
+                            minBookings,
+                            maxBookings,
+                            nbHours,
+                            isCollective,
+                            instructor,
+                            new LessonType()
+                        );
+
+                        if (instructor != null && !instructor.getLessons().contains(lesson)) {
+                            instructor.addLesson(lesson);
+                        } 
+                } 
+            }
+        }
+
+        
+
+        return instructor;
     }
 }
