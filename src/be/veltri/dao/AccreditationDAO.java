@@ -1,6 +1,7 @@
 package be.veltri.dao;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -37,12 +38,105 @@ public class AccreditationDAO extends DAO<Accreditation>{
     	return false;
     }
 
-	public Accreditation findDAO(int id)
-    {
-		return null;
+    @Override
+    public Accreditation findDAO(int id) {
+    	Accreditation accreditation = null;
+        String sql = """
+        		SELECT A.id_accreditation,  A.accreditation_name,
+                LISTAGG(LT.id_lessonType || ':' || LT.lesson_level || ':' || LT.lesson_price, ',') 
+                    WITHIN GROUP (ORDER BY LT.id_lessonType) AS lessonType_list,
+                LISTAGG(I.id_instructor || ':' || P.firstName || ':' || P.lastName || ':' || P.Birthdate || ':' || I.instructor_hireDate, ',') 
+                    WITHIN GROUP (ORDER BY I.id_instructor) AS instructor_list
+	            FROM  Accreditation A
+	            INNER JOIN LessonType LT ON LT.id_accreditation = A.id_accreditation
+	            INNER JOIN InstructorAccreditation IA ON A.id_accreditation = IA.id_accreditation
+	            INNER JOIN Instructor I ON IA.id_instructor = I.id_instructor
+	            INNER JOIN Person P ON I.id_Person = P.id_Person
+	            WHERE A.id_accreditation = ?
+	            GROUP BY A.id_accreditation, A.accreditation_name
+        		""";
+
+        try (PreparedStatement pstmt = this.connect.prepareStatement(
+                sql, 
+                ResultSet.TYPE_SCROLL_INSENSITIVE, 
+                ResultSet.CONCUR_READ_ONLY)) {
+            
+            pstmt.setInt(1, id);  
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                	accreditation = setAccreditationDAO(rs);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return accreditation;
     }
     
-	public List<Accreditation> findAllDAO() {
+    public List<Accreditation> findByNameDAO(String name) throws SQLException {
+        List<Accreditation> accreditations = new ArrayList<>();
+        String sql = """
+        	    SELECT A.id_accreditation,  A.accreditation_name,
+                LISTAGG(LT.id_lessonType || ':' || LT.lesson_level || ':' || LT.lesson_price, ',') 
+                    WITHIN GROUP (ORDER BY LT.id_lessonType) AS lessonType_list,
+                LISTAGG(I.id_instructor || ':' || P.firstName || ':' || P.lastName || ':' || P.Birthdate || ':' || I.instructor_hireDate, ',') 
+                    WITHIN GROUP (ORDER BY I.id_instructor) AS instructor_list
+	            FROM  Accreditation A
+	            LEFT JOIN LessonType LT ON LT.id_accreditation = A.id_accreditation
+	            LEFT JOIN InstructorAccreditation IA ON A.id_accreditation = IA.id_accreditation
+	            LEFT JOIN Instructor I ON IA.id_instructor = I.id_instructor
+	            LEFT JOIN Person P ON I.id_Person = P.id_Person
+	            WHERE A.accreditation_name LIKE ?
+	            GROUP BY A.id_accreditation, A.accreditation_name
+    	    """;
+
+        try (PreparedStatement pstmt = this.connect.prepareStatement(sql)) {
+            pstmt.setString(1, "%" + name + "%");
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Accreditation accreditation = setAccreditationDAO(rs);
+                accreditations.add(accreditation);
+            }
+        }
+        return accreditations;
+    }
+    
+    public List<Accreditation> findByInstructorDAO(Instructor instructor) {
+        List<Accreditation> accreditations = new ArrayList<>();
+        String sql = """
+        	    SELECT A.id_accreditation, A.accreditation_name,
+    	        LISTAGG(LT.id_lessonType || ':' || LT.lesson_level || ':' || LT.lesson_price, ',') 
+    	            WITHIN GROUP (ORDER BY LT.id_lessonType) AS lessonType_list,
+	            LISTAGG(I.id_instructor || ':' || P.firstName || ':' || P.lastName || ':' || P.Birthdate || ':' || I.instructor_hireDate, ',') 
+    		       WITHIN GROUP (ORDER BY I.id_instructor) AS instructor_list
+        	    FROM Accreditation A
+        	    LEFT JOIN LessonType LT ON LT.id_accreditation = A.id_accreditation
+        	    LEFT JOIN InstructorAccreditation IA ON IA.id_accreditation = A.id_accreditation
+        	    LEFT JOIN Instructor I ON IA.id_instructor = I.id_instructor
+        		LEFT JOIN Person P ON I.id_Person = P.id_Person
+        	    WHERE IA.id_instructor = ?
+        	    GROUP BY A.id_accreditation, A.accreditation_name
+        	""";
+
+        try (PreparedStatement stmt = this.connect.prepareStatement(sql)) {
+            
+            stmt.setInt(1, instructor.getId()); 
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                	 Accreditation accreditation = setAccreditationDAO(rs);
+					accreditations.add(accreditation);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return accreditations;
+    }
+
+    @Override
+    public List<Accreditation> findAllDAO() {
         List<Accreditation> accreditations = new ArrayList<>();
         String sql = """
         	    SELECT A.id_accreditation,  A.accreditation_name,

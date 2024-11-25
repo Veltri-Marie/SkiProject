@@ -91,10 +91,50 @@ public class InstructorDAO extends DAO<Instructor> {
 		return false;
 	}
     
+    private int findPersonIdByInstructorId(int instructorId) {
+        String sql = "SELECT id_Person FROM Instructor WHERE id_instructor = ?";
+        try (PreparedStatement pstmt = this.connect.prepareStatement(sql)) {
+            pstmt.setInt(1, instructorId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id_Person");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching person ID by instructor ID: " + e.getMessage());
+        }
+        return -1;
+    }
+    
     @Override
-    public boolean updateDAO(Instructor obj)
-    {
-    	return false;
+    public boolean updateDAO(Instructor instructor) {
+        String updatePersonSql = "UPDATE Person SET firstName = ?, lastName = ?, Birthdate = ? WHERE id_Person = ?";
+        String updateInstructorSql = "UPDATE Instructor SET instructor_hireDate = ? WHERE id_instructor = ?";
+
+        try (PreparedStatement pstmtPerson = this.connect.prepareStatement(updatePersonSql);
+             PreparedStatement pstmtInstructor = this.connect.prepareStatement(updateInstructorSql)) {
+
+            int personId = findPersonIdByInstructorId(instructor.getId());
+            if (personId == -1) {
+                System.err.println("Failed to retrieve associated person ID.");
+                return false;
+            }
+
+            pstmtPerson.setString(1, instructor.getFirstName());
+            pstmtPerson.setString(2, instructor.getLastName());
+            pstmtPerson.setDate(3, Date.valueOf(instructor.getBirthdate()));
+            pstmtPerson.setInt(4, personId);
+            int rowsAffectedPerson = pstmtPerson.executeUpdate();
+
+            pstmtInstructor.setDate(1, Date.valueOf(instructor.getHireDate()));
+            pstmtInstructor.setInt(2, instructor.getId());
+            int rowsAffectedInstructor = pstmtInstructor.executeUpdate();
+
+            return rowsAffectedPerson > 0 && rowsAffectedInstructor > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating instructor: " + e.getMessage());
+            return false;
+        }
     }
     
     @Override
@@ -256,6 +296,44 @@ public class InstructorDAO extends DAO<Instructor> {
             System.err.println("Error finding all instructors: " + e.getMessage());
         }
         return instructors;
+    }
+    
+    public void addAccreditationDAO(Instructor instructor, Accreditation accreditation) {
+        String sql = "INSERT INTO InstructorAccreditation (id_instructor, id_accreditation) VALUES (?, ?)";
+        try (PreparedStatement pstmt = this.connect.prepareStatement(sql)) {
+            pstmt.setInt(1, instructor.getId());
+            pstmt.setInt(2, accreditation.getId());
+            pstmt.executeUpdate(); 
+        } catch (SQLException e) {
+            System.err.println("Error adding accreditation to instructor " + instructor.getId() + ": " + e.getMessage());
+        }
+    }
+    
+    public boolean removeAccreditationDAO(Instructor instructor, Accreditation accreditation) {
+        String sql = "DELETE FROM InstructorAccreditation WHERE id_instructor = ? AND id_accreditation = ?";
+        
+        try (PreparedStatement pstmt = this.connect.prepareStatement(sql)) {
+            if (instructor == null || accreditation == null) {
+                System.err.println("Instructor or accreditation is null.");
+                return false;
+            }
+
+            pstmt.setInt(1, instructor.getId()); 
+            pstmt.setInt(2, accreditation.getId());
+
+            int rowsAffected = pstmt.executeUpdate(); 
+
+            if (rowsAffected > 0) {
+                return true;  
+            } else {
+                System.err.println("No rows were affected. The accreditation may not exist for this instructor.");
+                return false;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error deleting accreditation for instructor " + instructor.getId() + ": " + e.getMessage());
+            return false;
+        }
     }
     
     private Instructor setInstructorDAO(ResultSet rs) throws SQLException {

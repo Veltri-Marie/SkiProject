@@ -179,6 +179,21 @@ public class InstructorPanel extends JPanel {
                         dateChooserHireDate.setDate(Date.valueOf(selectedInstructor.getHireDate()));
                     }
                     
+                    btnManage = new JButton("Manage");
+                    btnManage.addActionListener(m -> {
+                        AccreditationPanel accreditationPanel = new AccreditationPanel(instructorId);
+
+                        JDialog accreditationDialog = new JDialog();
+                        accreditationDialog.setTitle("Instructor Accreditation");
+                        accreditationDialog.setModal(true); 
+                        accreditationDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE); 
+                        accreditationDialog.setBounds(35, 37, 360, 500); 
+                        accreditationDialog.getContentPane().add(accreditationPanel);
+
+                        accreditationDialog.setVisible(true);
+
+                        
+                    });
                     btnManage.setBounds(141, 199, 96, 50);
 
                     panelRegistration.add(btnManage);
@@ -288,7 +303,38 @@ public class InstructorPanel extends JPanel {
         return true;  
     }
     
-    private void updateInstructor() {
+private void updateInstructor() {
+    	
+        int selectedRow = tableInstructor.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select an instructor to update.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int instructorId = (int) tableInstructor.getValueAt(selectedRow, 0);
+        Instructor instructor = new Instructor();
+        instructor.setId(instructorId);
+        String firstName = tfInstructorFirstName.getText();
+        String lastName = tfInstructorLastName.getText();
+        LocalDate birthdate = dateChooserBirthdate.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate hireDate = dateChooserHireDate.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        if (!validateInstructorFields(firstName, lastName, birthdate, hireDate)) {
+            return;  
+        }
+        
+        instructor.setFirstName(firstName);
+        instructor.setLastName(lastName);
+        instructor.setBirthdate(birthdate);
+        instructor.setHireDate(hireDate);
+
+        boolean updated = instructor.update(conn);
+        if (updated) {
+            JOptionPane.showMessageDialog(this, "Instructor updated successfully!");
+            loadInstructorsFromDB(); 
+        } else {
+            JOptionPane.showMessageDialog(this, "Failed to update instructor.");
+        }
     }
     
     private void deleteInstructor() {

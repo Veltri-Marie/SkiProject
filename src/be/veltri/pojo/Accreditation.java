@@ -3,6 +3,7 @@ package be.veltri.pojo;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import be.veltri.dao.AccreditationDAO;
 
@@ -82,9 +83,19 @@ public class Accreditation {
     
     //METHODS
 
+    public static Accreditation find(int id, Connection conn) {
+    	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+        return accreditationDAO.findDAO(id);
+    }
+    
     public static List<Accreditation> findAll(Connection conn) {
     	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
         return accreditationDAO.findAllDAO();
+    }
+    
+    public static List<Accreditation> findByInstructor(Connection conn, Instructor instructor) {
+        AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+        return accreditationDAO.findByInstructorDAO(instructor);
     }
     
     public void addLessonType(LessonType lessonType) {
@@ -108,6 +119,26 @@ public class Accreditation {
         if (instructor != null && !instructors.contains(instructor)) {
             instructors.add(instructor); 
         }
+    }
+    
+    @Override
+    public String toString() {
+        return name;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(id_accreditation);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)  return true;
+        
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        Accreditation that = (Accreditation) obj;
+        return id_accreditation == that.id_accreditation;
     }
 
 }
