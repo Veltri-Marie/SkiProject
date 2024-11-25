@@ -1,8 +1,11 @@
 package be.veltri.pojo;
 
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import be.veltri.dao.SkierDAO;
 
 public class Skier extends Person {
 	// ATTRIBUTES
@@ -59,5 +62,16 @@ public class Skier extends Person {
         } else {
             throw new IllegalArgumentException("Bookings cannot be null.");
         }
+    }
+    
+ // METHODS
+    public boolean create(Connection conn) {
+        SkierDAO skierDAO = new SkierDAO(conn);
+        return skierDAO.createDAO(this); 
+    }
+
+    public static int getNextId(Connection conn) {
+        SkierDAO skierDAO = new SkierDAO(conn);
+        return skierDAO.getNextIdDAO(); 
     }
 }

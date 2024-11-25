@@ -39,6 +39,7 @@ public class MainPage extends JFrame {
         // Onglets
         JTabbedPane tabbedPane = new JTabbedPane();
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
+        tabbedPane.addTab("Skier", new SkierPanel());
         tabbedPane.addTab("Instructor", new InstructorPanel());        
     }
 }

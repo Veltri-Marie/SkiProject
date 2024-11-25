@@ -313,7 +313,6 @@ private void updateInstructor() {
 
         int instructorId = (int) tableInstructor.getValueAt(selectedRow, 0);
         Instructor instructor = Instructor.find(instructorId, conn);
-        instructor.setId(instructorId);
         String firstName = tfInstructorFirstName.getText();
         String lastName = tfInstructorLastName.getText();
         LocalDate birthdate = dateChooserBirthdate.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -345,8 +344,7 @@ private void updateInstructor() {
 	    }
 	
 	    int instructorId = (int) tableInstructor.getValueAt(selectedRow, 0);
-	    Instructor instructor = new Instructor();
-	    instructor.setId(instructorId);
+        Instructor instructor = Instructor.find(instructorId, conn);
 	
 	    int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this instructor?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
 	    if (response == JOptionPane.YES_OPTION) {
