@@ -26,6 +26,7 @@ public class SkierPanel extends JPanel {
     public SkierPanel() {
         setLayout(null);
         initializeComponents();
+        loadSkiersFromDB();
     }
 
     private void initializeComponents() {
@@ -34,6 +35,45 @@ public class SkierPanel extends JPanel {
         
         JPanel panelSearch = createSearchPanel();
         add(panelSearch);
+        
+        tableModel = new DefaultTableModel(
+                new Object[][] {},
+                new String[] { "Id", "LastName", "FirstName", "Birthdate", "PhoneNumber", "Email" }
+            );
+
+            table = new JTable(tableModel) {
+    			private static final long serialVersionUID = 1L;
+
+    			@Override
+                public boolean isCellEditable(int row, int column) {
+                    return false; 
+                }
+            };
+            table.setFont(new Font("Tahoma", Font.PLAIN, 12));
+            table.setBackground(new Color(255, 255, 255));
+            table.setForeground(new Color(0, 0, 0));
+
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.setBounds(21, 71, 557, 227);
+            panelSearch.add(scrollPane);
+
+            table.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent e) {
+                    int selectedRow = table.getSelectedRow();
+                    if (selectedRow != -1) {
+                        int skierId = (int) tableModel.getValueAt(selectedRow, 0);
+                        selectedSkier = Skier.find(skierId, conn); 
+                        if (selectedSkier != null) {
+                            tfFirstname.setText(selectedSkier.getFirstName());
+                            tfLastname.setText(selectedSkier.getLastName());
+                            dateChooser.setDate(Date.valueOf(selectedSkier.getBirthdate()));
+                            tfPhoneNumber.setText(selectedSkier.getPhoneNumber());
+                            tfEmail.setText(selectedSkier.getEmail());
+                            
+                        }
+                    }
+                }
+            });
     }
 
     private JPanel createRegistrationPanel() {
@@ -214,6 +254,13 @@ public class SkierPanel extends JPanel {
         return true;  
     }
 
+    private void loadSkiersFromDB() {
+        List<Skier> skiers = Skier.findAll(conn);
+        tableModel.setRowCount(0); 
+        for (Skier skier : skiers) {
+            tableModel.addRow(new Object[]{skier.getId(), skier.getLastName(), skier.getFirstName(), skier.getBirthdate(), skier.getPhoneNumber(), skier.getEmail()});
+        }
+    }
     
 
 }

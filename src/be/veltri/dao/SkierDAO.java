@@ -1,7 +1,14 @@
 package be.veltri.dao;
 
+import be.veltri.pojo.Booking;
+import be.veltri.pojo.Instructor;
+import be.veltri.pojo.Lesson;
+import be.veltri.pojo.Period;
 import be.veltri.pojo.Skier;
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SkierDAO extends DAO<Skier> {
@@ -74,14 +81,125 @@ public class SkierDAO extends DAO<Skier> {
     {
     	return false;
     }
-
-	public Skier findDAO(int id)
-    {
-		return null;
+    
+    @Override
+    public Skier findDAO(int id) {
+        Skier skier = null;
+        String sql = """
+        		SELECT S.id_skier, S.skier_phoneNumber, S.skier_email, P.id_Person, P.firstName,  P.lastName,  P.Birthdate,
+        	        LISTAGG(B.id_booking || ':' || B.reservation_date || ':' || B.insurance_opt, ',') 
+        	            WITHIN GROUP (ORDER BY B.id_booking) AS bookings_list
+        	    FROM Skier S
+        	    INNER JOIN Person P ON S.id_Person = P.id_Person
+        	    LEFT JOIN Booking B ON S.id_skier = B.id_skier
+        	    WHERE S.id_skier LIKE ?
+        	    GROUP BY S.id_skier, S.skier_phoneNumber, S.skier_email, P.id_Person, P.firstName,  P.lastName,  P.Birthdate
+            """;
+        
+        try (PreparedStatement pstmt = this.connect.prepareStatement(sql)) {
+            pstmt.setInt(1, id);  
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    skier = setSkierDAO(rs); 
+                    skier.setId(rs.getInt("id_skier"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return skier;
     }
     
-    public List<Skier> findAllDAO()
-    {
-    	return null;
+    public List<Skier> findByLastnameDAO(String lastname) throws SQLException {
+        List<Skier> skiers = new ArrayList<>();
+        String sql = """
+        	    SELECT S.id_skier, S.skier_phoneNumber, S.skier_email, P.id_Person, P.firstName,  P.lastName,  P.Birthdate,
+        	        LISTAGG(B.id_booking || ':' || B.reservation_date || ':' || B.insurance_opt, ',') 
+        	            WITHIN GROUP (ORDER BY B.id_booking) AS bookings_list
+        	    FROM Skier S
+        	    INNER JOIN Person P ON S.id_Person = P.id_Person
+        	    LEFT JOIN Booking B ON S.id_skier = B.id_skier
+        	    WHERE P.lastName LIKE ?
+        	    GROUP BY S.id_skier, S.skier_phoneNumber, S.skier_email, P.id_Person, P.firstName,  P.lastName,  P.Birthdate
+        	    """;
+
+        
+        try (PreparedStatement pstmt = this.connect.prepareStatement(sql)) {
+            pstmt.setString(1, "%" + lastname + "%");
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Skier skier = setSkierDAO(rs); 
+                skiers.add(skier);
+            }
+        }
+        return skiers;
+    }
+    
+    @Override
+    public List<Skier> findAllDAO() {
+        List<Skier> skiers = new ArrayList<>();
+        String sql = """
+        	    SELECT S.id_skier, S.skier_phoneNumber, S.skier_email, P.id_Person, P.firstName,  P.lastName,  P.Birthdate,
+        	        LISTAGG(B.id_booking || ':' || B.reservation_date || ':' || B.insurance_opt, ',') 
+        	            WITHIN GROUP (ORDER BY B.id_booking) AS bookings_list
+        	    FROM Skier S
+        	    INNER JOIN Person P ON S.id_Person = P.id_Person
+        	    LEFT JOIN Booking B ON S.id_skier = B.id_skier
+        	    GROUP BY S.id_skier, S.skier_phoneNumber, S.skier_email, P.id_Person, P.firstName,  P.lastName,  P.Birthdate
+        	    """;
+
+        try (Statement stmt = this.connect.createStatement(
+                ResultSet.TYPE_SCROLL_INSENSITIVE, 
+                ResultSet.CONCUR_READ_ONLY);
+             ResultSet rs = stmt.executeQuery(sql)) {
+             
+            while (rs.next()) {
+                Skier skier = setSkierDAO(rs); 
+                skiers.add(skier);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching all skiers: " + e.getMessage());
+        }
+        return skiers;
+    }
+
+    
+    private Skier setSkierDAO(ResultSet rs) throws SQLException {
+
+        Skier skier = new Skier(
+    		rs.getInt("id_skier"),
+    		rs.getString("firstName"),
+    		rs.getString("lastName"),
+    		rs.getDate("Birthdate").toLocalDate(),
+    		rs.getString("skier_phoneNumber"),
+    		rs.getString("skier_email")        		
+    		);
+        
+        String bookingsList = rs.getString("bookings_list");
+        if (bookingsList != null && !bookingsList.isEmpty()) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yy");
+            String[] bookingEntries = bookingsList.split(",");
+            for (String entry : bookingEntries) {
+                String[] parts = entry.split(":");
+                if (parts.length == 3) {
+	                int bookingId = Integer.parseInt(parts[0]);
+	                LocalDate reservationDate = LocalDate.parse(parts[1], formatter); 
+	                boolean insuranceOpt = Boolean.parseBoolean(parts[2]);
+
+	                Booking booking = new Booking(
+	                    bookingId,
+	                    reservationDate,
+	                    new Lesson(),
+	                    new Instructor(),
+	                    new Period(),
+	                    skier,
+	                    insuranceOpt
+	                );
+	                skier.addBooking(booking);
+                }
+            }
+        }
+        return skier;
     }
 }
