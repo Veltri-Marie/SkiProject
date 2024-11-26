@@ -77,6 +77,11 @@ public class Skier extends Person {
         return skierDAO.getNextIdDAO(); 
     }
     
+    public boolean update(Connection conn) {
+        SkierDAO skierDAO = new SkierDAO(conn);
+        return skierDAO.updateDAO(this);
+    }
+    
     public static Skier find(int id, Connection conn) {
         SkierDAO skierDAO = new SkierDAO(conn);
         return skierDAO.findDAO(id);

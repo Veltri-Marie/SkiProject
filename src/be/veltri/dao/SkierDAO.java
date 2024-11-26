@@ -77,9 +77,54 @@ public class SkierDAO extends DAO<Skier> {
 		return false;
 	}
     
-    public boolean updateDAO(Skier obj)
-    {
-    	return false;
+    @Override
+    public boolean updateDAO(Skier skier) {
+        String updatePersonSql = "UPDATE Person SET firstName = ?, lastName = ?, Birthdate = ? WHERE id_Person = ?";
+        String updateSkierSql = "UPDATE Skier SET skier_phoneNumber = ?, skier_email = ? WHERE id_skier = ?";
+        
+        try (PreparedStatement pstmtPerson = this.connect.prepareStatement(updatePersonSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+             PreparedStatement pstmtSkier = this.connect.prepareStatement(updateSkierSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+            
+            int personId = findPersonIdBySkierId(skier.getId());
+            if (personId == -1) {
+                System.err.println("Failed to retrieve associated person ID.");
+                return false;
+            }
+            
+            pstmtPerson.setString(1, skier.getFirstName());
+            pstmtPerson.setString(2, skier.getLastName());
+            pstmtPerson.setDate(3, Date.valueOf(skier.getBirthdate()));
+            pstmtPerson.setInt(4, personId);
+            
+            int rowsAffectedPerson = pstmtPerson.executeUpdate();
+            
+            pstmtSkier.setString(1, skier.getPhoneNumber());
+            pstmtSkier.setString(2, skier.getEmail());
+            pstmtSkier.setInt(3, skier.getId()); 
+            
+            int rowsAffectedSkier = pstmtSkier.executeUpdate();
+            
+            return rowsAffectedPerson > 0 && rowsAffectedSkier > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating skier: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private int findPersonIdBySkierId(int skierId) {
+        String sql = "SELECT id_Person FROM Skier WHERE id_skier = ?";
+        try (PreparedStatement pstmt = this.connect.prepareStatement(sql)) {
+            pstmt.setInt(1, skierId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id_Person");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching person ID by skier ID: " + e.getMessage());
+        }
+        return -1; 
     }
     
     @Override
