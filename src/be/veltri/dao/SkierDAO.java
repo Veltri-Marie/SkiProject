@@ -72,10 +72,37 @@ public class SkierDAO extends DAO<Skier> {
         return false; 
     }
     
-    public boolean deleteDAO(Skier obj)
-	{
-		return false;
-	}
+    @Override 
+    public boolean deleteDAO(Skier skier) {
+        String deleteBookingsSql = "DELETE FROM Booking WHERE id_skier = ?";
+        String deleteSkierSql = "DELETE FROM Skier WHERE id_skier = ?";
+        String deletePersonSql = "DELETE FROM Person WHERE id_Person = ?";
+
+        try (
+            PreparedStatement pstmtBooking = this.connect.prepareStatement(deleteBookingsSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            PreparedStatement pstmtSkier = this.connect.prepareStatement(deleteSkierSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            PreparedStatement pstmtPerson = this.connect.prepareStatement(deletePersonSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
+        ) {
+            int personId = findPersonIdBySkierId(skier.getId());
+            if (personId == -1) {
+                System.err.println("No associated person found for skier ID: " + skier.getId());
+                return false;
+            }
+
+            pstmtBooking.setInt(1, skier.getId());
+            pstmtBooking.executeUpdate();
+
+            pstmtSkier.setInt(1, skier.getId());
+            pstmtSkier.executeUpdate();
+
+            pstmtPerson.setInt(1, personId);
+            return pstmtPerson.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error deleting skier: " + e.getMessage());
+            return false;
+        }
+    }
     
     @Override
     public boolean updateDAO(Skier skier) {

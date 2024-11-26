@@ -86,6 +86,11 @@ public class Skier extends Person {
         SkierDAO skierDAO = new SkierDAO(conn);
         return skierDAO.findDAO(id);
     }
+    
+    public boolean delete(Connection conn) {
+        SkierDAO skierDAO = new SkierDAO(conn);
+        return skierDAO.deleteDAO(this);
+    }
 
     public static List<Skier> findByLastName(String lastname, Connection conn) {
         SkierDAO skierDAO = new SkierDAO(conn);
