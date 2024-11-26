@@ -234,10 +234,41 @@ public class SkierPanel extends JPanel {
     }
 
     private void deleteSkier() {
+        try {
+            if (selectedSkier != null) {
+                if (selectedSkier.delete(SkiConnection.getInstance())) { 
+                    JOptionPane.showMessageDialog(SkierPanel.this, "Skier deleted successfully!");
+                    loadSkiersFromDB();
+                } else {
+                    JOptionPane.showMessageDialog(SkierPanel.this, "Failed to delete skier.");
+                }
+            } else {
+                JOptionPane.showMessageDialog(SkierPanel.this, "No skier selected.");
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(SkierPanel.this, "Error during deletion: " + ex.getMessage());
+        }
     }
 
     private void findSkier() {
+        String lastname = tfFindLastName.getText();
+        List<Skier> skiers = Skier.findByLastName(lastname, conn);
+        tableModel.setRowCount(0);
 
+        if (skiers.isEmpty()) {
+            JOptionPane.showMessageDialog(SkierPanel.this, "No skier found.");
+        } else {
+            for (Skier skier : skiers) {
+                tableModel.addRow(new Object[] {
+                        skier.getId(),
+                        skier.getLastName(),
+                        skier.getFirstName(),
+                        skier.getBirthdate(),
+                        skier.getPhoneNumber(),
+                        skier.getEmail()
+                });
+            }
+        }
     }
 
     private void clearFields() {
