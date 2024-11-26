@@ -1,7 +1,11 @@
 package be.veltri.pojo;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+import be.veltri.dao.LessonTypeDAO;
 
 public class LessonType {
 	// ATTRIBUTES
@@ -90,6 +94,66 @@ public class LessonType {
 	        } else {
 	            throw new IllegalArgumentException("Lessons cannot be null.");
 	        }
+	    }
+	    
+	    // METHODS
+	    public boolean create(Connection conn) {
+	        LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+	        return lessonTypeDAO.createDAO(this); 
+	    }
+	    
+	    public static int getNextId(Connection conn) {
+	        LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+	        return lessonTypeDAO.getNextIdDAO(); 
+	    }
+
+	    public boolean update(Connection conn) {
+	    	LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+	        return lessonTypeDAO.updateDAO(this);
+	    }
+
+	    public boolean delete(Connection conn) {
+	    	LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+	        return lessonTypeDAO.deleteDAO(this);
+	    }
+
+	    public static LessonType find(int id, Connection conn) {
+	    	LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+	        return lessonTypeDAO.findDAO(id);
+	    }
+	    
+
+	    public static List<LessonType> findAll(Connection conn) {
+	    	LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+	        return lessonTypeDAO.findAllDAO();
+	    }
+	    
+	    public void addLesson(Lesson lesson) {
+	    	if(lessons == null)
+	    		lessons = new ArrayList<>();
+	        if (lesson != null) {
+	            lessons.add(lesson);
+	        } else {
+	            throw new IllegalArgumentException("Lesson cannot be null.");
+	        }
+	    }
+
+	    @Override
+	    public String toString() {
+	        return accreditation + " " + level + " " + price + "€";
+	    }
+
+	    @Override
+	    public int hashCode() {
+	        return Objects.hash(id_LessonType);
+	    }
+
+	    @Override
+	    public boolean equals(Object obj) {
+	        if (this == obj) return true;
+	        if (obj == null || getClass() != obj.getClass()) return false;
+	        LessonType that = (LessonType) obj;
+	        return id_LessonType == that.id_LessonType;
 	    }
 
 }

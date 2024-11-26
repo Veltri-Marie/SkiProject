@@ -111,7 +111,17 @@ public class Instructor extends Person {
         return instructorDAO.findAllDAO();
     }
     
-public void addAccreditation(Connection conn, Accreditation accreditation) {
+    public boolean isAvailable(LocalDate date) {
+        if (date == null) throw new IllegalArgumentException("Lesson cannot be null.");
+        for (Lesson existingLesson : lessons) {
+            if (existingLesson.getLessonDate().equals(date)) {
+                return false; 
+            }
+        }
+        return true; 
+    }
+    
+    public void addAccreditation(Connection conn, Accreditation accreditation) {
 		
         if (accreditation != null && !accreditations.contains(accreditation)) {
             accreditations.add(accreditation);
