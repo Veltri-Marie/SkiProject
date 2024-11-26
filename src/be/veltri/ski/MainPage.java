@@ -40,6 +40,8 @@ public class MainPage extends JFrame {
         JTabbedPane tabbedPane = new JTabbedPane();
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
         tabbedPane.addTab("Skier", new SkierPanel());
-        tabbedPane.addTab("Instructor", new InstructorPanel());        
+        tabbedPane.addTab("Instructor", new InstructorPanel());    
+        tabbedPane.addTab("Lesson", new LessonPanel());
+
     }
 }

@@ -1,8 +1,12 @@
 package be.veltri.pojo;
 
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+import be.veltri.dao.LessonDAO;
 
 public class Lesson {
 	 // ATTRIBUTES
@@ -114,5 +118,54 @@ public class Lesson {
 			throw new IllegalArgumentException("Bookings cannot be null.");
 		}
 	}
+	
+	//METHODS
+	
+	public boolean create(Connection conn) {
+        LessonDAO lessonDAO = new LessonDAO(conn);
+        return lessonDAO.createDAO(this);
+    }
+
+    public static int getNextId(Connection conn) {
+        LessonDAO lessonDAO = new LessonDAO(conn);
+        return lessonDAO.getNextIdDAO();
+    }
+
+
+    public void addBooking(Booking booking) {
+
+        if (booking.getLesson() != null && booking.getLesson().getId() == this.id_Lesson) {
+            bookings.add(booking);
+        } 
+    }
+
+    @Override
+    public String toString() {
+    	if(lessonType.getAccreditation() != null && instructor != null) {
+    		return lessonType.getAccreditation().getName() + " " +
+    	               lessonType.getLevel() +
+    	               (isCollective ? " collective" : " individual (" + nb_hours + " hours)") +
+    	               " lesson with " + instructor.getFirstName() + " " + instructor.getLastName() +
+    	               " on " + lessonDate +
+    	               " - Price: " + lessonType.getPrice() + "€";
+    	}
+    	else 
+    		return "Lesson not found";
+    }
+
+
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(id_Lesson);
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Lesson lesson = (Lesson) obj;
+        return id_Lesson == lesson.getId(); // Assume `id` uniquely identifies a lesson
+    }
     
 }
