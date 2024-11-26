@@ -201,6 +201,36 @@ public class SkierPanel extends JPanel {
 
 
     private void updateSkier() {
+        try {
+            if (selectedSkier != null) {
+            	String firstName = tfFirstname.getText();
+                String lastName = tfLastname.getText();
+                String phoneNumber = tfPhoneNumber.getText();
+                String email = tfEmail.getText();
+                LocalDate birthdate = dateChooser.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(); 
+                
+                if (!validateSkierFields(firstName, lastName, phoneNumber, email, birthdate)) {
+                    return;
+                }
+
+                selectedSkier.setFirstName(firstName);
+                selectedSkier.setLastName(lastName);
+                selectedSkier.setBirthdate(birthdate);
+                selectedSkier.setPhoneNumber(phoneNumber);
+                selectedSkier.setEmail(email);
+
+                if (selectedSkier.update(conn)) {
+                    JOptionPane.showMessageDialog(SkierPanel.this, "Skier updated successfully!");
+                    loadSkiersFromDB();
+                } else {
+                    JOptionPane.showMessageDialog(SkierPanel.this, "Failed to update skier.");
+                }
+            } else {
+                JOptionPane.showMessageDialog(SkierPanel.this, "No skier selected.");
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(SkierPanel.this, "Error during update: " + ex.getMessage());
+        }
     }
 
     private void deleteSkier() {
