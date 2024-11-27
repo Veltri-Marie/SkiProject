@@ -282,6 +282,55 @@ public class LessonPanel extends JPanel {
     }
 
     private void updateLesson() {
+        int selectedRow = tableLesson.getSelectedRow();
+        if (selectedRow != -1) {
+            int lessonId = (int) tableLesson.getValueAt(selectedRow, 0);
+            Lesson lesson = new Lesson();
+            lesson.setId(lessonId);
+
+            lesson.setLessonDate(dateChooser.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+            lesson.setMinBookings(Integer.parseInt(tfMinBooking.getText()));
+            lesson.setMaxBookings(Integer.parseInt(tfMaxBooking.getText()));
+
+            Instructor selectedInstructor = listInstructors.getSelectedValue();
+            LessonType selectedLessonType = listLessonTypes.getSelectedValue();
+
+            boolean isCollective = chckbxNewCheckBox.isSelected();
+            lesson.setIsCollective(isCollective);
+
+            if (isCollective) {
+                lesson.setNb_hours(168);
+            } else {
+                try {
+                    int nbHours = Integer.parseInt(tfNbHours.getText());
+                    if (nbHours <= 0) {
+                        JOptionPane.showMessageDialog(this, "Please enter a valid number of hours greater than 0.", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    lesson.setNb_hours(nbHours);
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(this, "Please enter a valid number for hours.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
+
+            if (!validateLessonFields(lesson.getLessonDate(), lesson.getMinBookings(), lesson.getMaxBookings(), isCollective, lesson.getNb_hours(), selectedInstructor, selectedLessonType)) {
+                return;  
+            }
+
+            lesson.setInstructor(selectedInstructor);
+            lesson.setLessonType(selectedLessonType);
+
+            boolean updated = lesson.update(conn);
+            if (updated) {
+                JOptionPane.showMessageDialog(this, "Lesson updated successfully!");
+                loadLessonsFromDB();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update lesson.");
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Please select a lesson to update.");
+        }
     }
 
 
