@@ -58,10 +58,26 @@ public class LessonDAO extends DAO<Lesson>{
     }
     
     @Override
-    public boolean deleteDAO(Lesson obj)
-	{
-		return false;
-	}
+    public boolean deleteDAO(Lesson lesson) {
+   	 String deleteBookingsSql = "DELETE FROM Booking WHERE id_lesson = ?";
+        String deleteLessonSql = "DELETE FROM Lesson WHERE id_lesson = ?";
+        
+        
+        try (
+                PreparedStatement pstmtBooking = this.connect.prepareStatement(deleteBookingsSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+                PreparedStatement pstmtLesson = this.connect.prepareStatement(deleteLessonSql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
+            ) {
+                pstmtBooking.setInt(1, lesson.getId());
+                pstmtBooking.executeUpdate();
+
+                pstmtLesson.setInt(1, lesson.getId());
+                return pstmtLesson.executeUpdate() > 0;
+
+            } catch (SQLException e) {
+                System.err.println("Error deleting lesson: " + e.getMessage());
+                return false;
+            }
+   }
     
     @Override
     public boolean updateDAO(Lesson lesson) {

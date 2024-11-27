@@ -126,8 +126,6 @@ public class LessonPanel extends JPanel {
 
         tfNbHours.setVisible(!chckbxNewCheckBox.isSelected());
 
-
-
         addButtonActions(panelRegistration);            
     }
 
@@ -201,8 +199,6 @@ public class LessonPanel extends JPanel {
     				}
     			}
     		});
-
-
 
             btnFind.addActionListener(e -> findLesson());
     }
@@ -333,9 +329,25 @@ public class LessonPanel extends JPanel {
         }
     }
 
-
-
     private void deleteLesson() {
+        int selectedRow = tableLesson.getSelectedRow();
+        if (selectedRow != -1) {
+            int lessonId = (int) tableLesson.getValueAt(selectedRow, 0);
+            Lesson lesson = new Lesson();
+            lesson.setId(lessonId);
+            int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this lesson?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+            if (response == JOptionPane.YES_OPTION) {
+                boolean deleted = lesson.delete(conn);
+                if (deleted) {
+                    ((DefaultTableModel) tableLesson.getModel()).removeRow(selectedRow);
+                    JOptionPane.showMessageDialog(this, "Lesson deleted successfully!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to delete lesson.");
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Please select a lesson to delete.");
+        }
     }
     
     private void findLesson() {
