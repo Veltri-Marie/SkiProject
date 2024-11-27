@@ -131,6 +131,11 @@ public class Lesson {
         return lessonDAO.getNextIdDAO();
     }
     
+    public boolean delete(Connection conn) {
+        LessonDAO lessonDAO = new LessonDAO(conn);
+        return lessonDAO.deleteDAO(this);
+    }
+    
     public boolean update(Connection conn) {
         LessonDAO lessonDAO = new LessonDAO(conn);
         return lessonDAO.updateDAO(this);
@@ -167,8 +172,6 @@ public class Lesson {
     	else 
     		return "Lesson not found";
     }
-
-
     
     @Override
     public int hashCode() {
@@ -180,7 +183,7 @@ public class Lesson {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Lesson lesson = (Lesson) obj;
-        return id_Lesson == lesson.getId(); // Assume `id` uniquely identifies a lesson
+        return id_Lesson == lesson.getId(); 
     }
     
 }
