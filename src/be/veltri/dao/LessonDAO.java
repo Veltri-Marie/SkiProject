@@ -64,9 +64,25 @@ public class LessonDAO extends DAO<Lesson>{
 	}
     
     @Override
-    public boolean updateDAO(Lesson obj)
-    {
-    	return false;
+    public boolean updateDAO(Lesson lesson) {
+        String sql = "UPDATE Lesson SET lessonDate = ?, minBookings = ?, maxBookings = ?, nb_hours = ?, isCollective = ?, id_instructor = ?, id_lessonType = ? WHERE id_lesson = ?";
+        try (PreparedStatement pstmt = this.connect.prepareStatement(sql)) { 
+
+            pstmt.setDate(1, Date.valueOf(lesson.getLessonDate())); 
+            pstmt.setInt(2, lesson.getMinBookings());              
+            pstmt.setInt(3, lesson.getMaxBookings());              
+            pstmt.setInt(4, lesson.getNb_hours());                 
+            pstmt.setBoolean(5, lesson.getIsCollective());         
+            pstmt.setInt(6, lesson.getInstructor().getId());      
+            pstmt.setInt(7, lesson.getLessonType().getId());       
+            pstmt.setInt(8, lesson.getId());                      
+
+            return pstmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override

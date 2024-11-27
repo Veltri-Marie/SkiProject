@@ -131,6 +131,11 @@ public class Lesson {
         return lessonDAO.getNextIdDAO();
     }
     
+    public boolean update(Connection conn) {
+        LessonDAO lessonDAO = new LessonDAO(conn);
+        return lessonDAO.updateDAO(this);
+    }
+    
     public static Lesson find(int id, Connection conn) {
         LessonDAO lessonDAO = new LessonDAO(conn);
         return lessonDAO.findDAO(id);
