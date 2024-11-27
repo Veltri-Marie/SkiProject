@@ -1,8 +1,12 @@
 package be.veltri.pojo;
 
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+import be.veltri.dao.PeriodDAO;
 
 public class Period {
 	 // ATTRIBUTES
@@ -90,4 +94,74 @@ public class Period {
             throw new IllegalArgumentException("Bookings cannot be null.");
         }
     }
+    
+ // METHODS
+    public boolean create(Connection conn) {
+    	PeriodDAO periodDAO = new PeriodDAO(conn);
+        return periodDAO.createDAO(this); 
+    }
+    
+    public static int getNextId(Connection conn) {
+    	PeriodDAO periodDAO = new PeriodDAO(conn);
+        return periodDAO.getNextIdDAO(); 
+    }
+    
+    public boolean update(Connection conn) {
+    	PeriodDAO periodDAO = new PeriodDAO(conn);
+        return periodDAO.updateDAO(this);
+    }
+
+    public boolean delete(Connection conn) {
+    	PeriodDAO periodDAO = new PeriodDAO(conn);
+        return periodDAO.deleteDAO(this);
+    }
+
+    public static Period find(int id, Connection conn) {
+    	PeriodDAO periodDAO = new PeriodDAO(conn);
+        return periodDAO.findDAO(id);
+    }
+    
+	public static Period findByDate(LocalDate date, Connection conn) {
+		PeriodDAO periodDAO = new PeriodDAO(conn);
+		return periodDAO.findByDateDAO(date);
+	}
+
+
+    public static List<Period> findAll(Connection conn) {
+    	PeriodDAO periodDAO = new PeriodDAO(conn);
+        return periodDAO.findAllDAO();
+    }
+
+    public int getCurrentBookingsCount() {
+        return bookings.size();
+    }
+    
+    public void addBooking(Booking booking) {
+    	if (bookings == null) 
+    	{
+    		this.bookings = new ArrayList<>();
+    	}
+        if (booking != null) {
+            bookings.add(booking);
+        } else {
+            throw new IllegalArgumentException("Booking cannot be null.");
+        }
+    }
+    @Override
+    public String toString() {
+        return "id : " + id_period;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(id_period, startDate, endDate, isVacation);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Period that = (Period) obj;
+        return id_period == that.id_period;
+    }    
 }

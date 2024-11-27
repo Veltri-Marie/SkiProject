@@ -23,7 +23,6 @@ public class MainPage extends JFrame {
     }
 
     public MainPage() {
-        Connection conn = SkiConnection.getInstance();
         setTitle("Domaine Châtelet Ski School");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(100, 100, 950, 500);
@@ -39,6 +38,7 @@ public class MainPage extends JFrame {
         // Onglets
         JTabbedPane tabbedPane = new JTabbedPane();
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
+        tabbedPane.addTab("Booking", new BookingPanel());
         tabbedPane.addTab("Skier", new SkierPanel());
         tabbedPane.addTab("Instructor", new InstructorPanel());    
         tabbedPane.addTab("Lesson", new LessonPanel());

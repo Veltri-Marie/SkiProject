@@ -150,6 +150,14 @@ public class Lesson {
         LessonDAO lessonDAO = new LessonDAO(conn);
         return lessonDAO.findAllDAO();
     }
+    
+    public double getLessonPrice() {
+        return lessonType.getPrice();
+    }
+
+    public int getCurrentBookingsCount() {
+        return bookings.size();
+    }
 
 
     public void addBooking(Booking booking) {
