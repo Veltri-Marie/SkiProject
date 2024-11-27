@@ -38,6 +38,7 @@ public class LessonPanel extends JPanel {
     public LessonPanel() {
         setLayout(null);
         initializeComponents();
+        loadLessonsFromDB();
         loadInstructorsFromDB();
         loadLessonTypesFromDB();
     }
@@ -149,6 +150,61 @@ public class LessonPanel extends JPanel {
         JButton btnFind = new JButton("FIND");
         btnFind.setBounds(245, 28, 85, 21);
         panelSearch.add(btnFind);
+        
+        model = new DefaultTableModel(
+                new Object[][] {},
+                new String[] { "Lesson id", "Start date", "Min Booking", "Max Booking", "Instructor", "Lesson Type", "IsCollective", "Nb Hours"}
+            );
+
+            tableLesson = new JTable(model) {
+    			private static final long serialVersionUID = 1L;
+
+    			@Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+            tableLesson.setFont(new Font("Tahoma", Font.PLAIN, 12));
+            tableLesson.setBackground(Color.WHITE);
+            tableLesson.setForeground(Color.BLACK);
+
+            JScrollPane scrollPane = new JScrollPane(tableLesson);
+            scrollPane.setBounds(10, 63, 557, 276);
+            panelSearch.add(scrollPane);
+
+    	
+    		tableLesson.addMouseListener(new MouseAdapter() {
+    			public void mouseClicked(MouseEvent e) {
+    				int selectedRow = tableLesson.getSelectedRow();
+    				if (selectedRow != -1) {
+    					int lessonId = (int) tableLesson.getValueAt(selectedRow, 0);
+    					Lesson selectedLesson = Lesson.find(lessonId, conn);
+
+    					if (selectedLesson != null) {
+    						dateChooser.setDate(Date.valueOf(selectedLesson.getLessonDate()));
+    						tfMinBooking.setText(String.valueOf(selectedLesson.getMinBookings()));
+    						tfMaxBooking.setText(String.valueOf(selectedLesson.getMaxBookings()));
+
+    						listInstructors.setSelectedValue(selectedLesson.getInstructor(), true);
+    						
+    						listLessonTypes.setSelectedValue(selectedLesson.getLessonType(), true);			
+
+    						chckbxNewCheckBox.setSelected(selectedLesson.getIsCollective());
+
+    						if (selectedLesson.getIsCollective()) {
+    							tfNbHours.setVisible(false);
+    						} else {
+    							tfNbHours.setVisible(true);
+    							tfNbHours.setText(String.valueOf(selectedLesson.getNb_hours()));
+    						}
+    					}
+    				}
+    			}
+    		});
+
+
+
+            btnFind.addActionListener(e -> findLesson());
     }
 
 
@@ -232,6 +288,37 @@ public class LessonPanel extends JPanel {
 
     private void deleteLesson() {
     }
+    
+    private void findLesson() {
+        String searchText = tfSearchLessonName.getText().trim();
+        DefaultTableModel model = (DefaultTableModel) tableLesson.getModel();
+        model.setRowCount(0); 
+
+        if (searchText.isEmpty()) loadLessonsFromDB();
+        else {
+            try {
+                int searchId = Integer.parseInt(searchText); 
+                Lesson lesson = Lesson.find(searchId, conn); 
+                
+                if (lesson != null) {
+                    model.addRow(new Object[] {
+                        lesson.getId(),
+                        lesson.getLessonDate(),
+                        lesson.getMinBookings(),
+                        lesson.getMaxBookings(),
+                        lesson.getInstructor().toString(),
+                        lesson.getLessonType().getLevel() + " à " + lesson.getLessonType().getPrice() + "€",
+                        lesson.getIsCollective(),
+                        lesson.getNb_hours()
+                    });
+                } else {
+                    JOptionPane.showMessageDialog(this, "Leçon non trouvée.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Veuillez entrer un ID valide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
 
     private void clearFields() {
         tfMinBooking.setText("");
@@ -311,7 +398,23 @@ public class LessonPanel extends JPanel {
         return true;
     }
     
-
+    private void loadLessonsFromDB() {
+        List<Lesson> lessons = Lesson.findAll(conn);
+        DefaultTableModel model = (DefaultTableModel) tableLesson.getModel();
+        model.setRowCount(0); 
+        for (Lesson lesson : lessons) {
+            model.addRow(new Object[] {
+                lesson.getId(),
+                lesson.getLessonDate(),
+                lesson.getMinBookings(),
+                lesson.getMaxBookings(),
+                lesson.getInstructor().toString(),
+                lesson.getLessonType().getLevel() + " à " + lesson.getLessonType().getPrice() + "€" ,
+                lesson.getIsCollective(),
+                lesson.getNb_hours()
+            });
+        }
+    }
         
     private void loadInstructorsFromDB() {
         instructorListModel.clear();
