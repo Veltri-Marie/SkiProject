@@ -1,8 +1,12 @@
 package be.veltri.pojo;
 
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+import be.veltri.dao.BookingDAO;
 
 public class Booking {
 	// ATTRIBUTES
@@ -88,6 +92,86 @@ public class Booking {
 
     public void setInsuranceOpt(boolean insuranceOpt) {
         this.insuranceOpt = insuranceOpt; 
+    }
+    
+// METHODS
+    
+    public boolean create(Connection conn) {
+        BookingDAO bookingDAO = new BookingDAO(conn);
+        return bookingDAO.createDAO(this); 
+    }
+
+    
+    public static int getNextId(Connection conn) {
+        BookingDAO bookingDAO = new BookingDAO(conn);
+        return bookingDAO.getNextIdDAO(); 
+    }
+
+    
+    public double calculatePrice() {
+        double price = 0.0;
+        int countMorning = 0;
+        int countAfternoon = 0;
+
+        if (lesson != null) {
+        	
+    		if(lesson.getNb_hours() == 1 )
+    			price += 60;
+    		else if (lesson.getNb_hours() == 2)
+				price += 90;
+    		else
+    			price += lesson.getLessonPrice();
+        }
+        
+
+		for (LessonSession lessonSession : lessonSessions) {
+			if (lessonSession.getSessionType().toLowerCase().equals("morning"))
+				countMorning++;
+			if (lessonSession.getSessionType().toLowerCase().equals("afternoon"))
+				countAfternoon++;
+		}
+
+		if (countMorning > 0 && countAfternoon > 0) {
+            price *= 0.85; 
+        }
+
+        if (insuranceOpt) {
+            price += 20.0;
+        }
+        
+        return price;
+    }
+    
+    public void addLessonSession(LessonSession lessonSession) {
+		if (lessonSessions == null) {
+            lessonSessions = new ArrayList<>();
+        }
+		if (lessonSession != null && !lessonSessions.contains(lessonSession)) {
+			lessonSessions.add(lessonSession);
+		} else {
+			throw new IllegalArgumentException("Lesson session cannot be null.");
+		}
+	}
+    
+    @Override
+    public String toString() {
+        return "Booking{" +
+                "id_Booking=" + id_Booking ;
+    }
+
+    // hashCode
+    @Override
+    public int hashCode() {
+        return Objects.hash(id_Booking);
+    }
+
+    // equals
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true; 
+        if (obj == null || getClass() != obj.getClass()) return false; 
+        Booking booking = (Booking) obj; 
+        return id_Booking == booking.id_Booking; 
     }
    
 }

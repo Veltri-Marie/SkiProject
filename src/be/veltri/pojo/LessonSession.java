@@ -1,5 +1,11 @@
 package be.veltri.pojo;
 
+import java.sql.Connection;
+import java.util.List;
+import java.util.Objects;
+
+import be.veltri.dao.LessonSessionDAO;
+
 public class LessonSession {
 	// ATTRIBUTES
 	private int id_session;
@@ -40,5 +46,55 @@ public class LessonSession {
 
     public void setBooking(Booking booking) {
         this.booking = booking;
+    }
+    
+	 //METHODS
+    public boolean create(Connection conn) {
+    	LessonSessionDAO  sessionDAO= new LessonSessionDAO(conn);
+        return sessionDAO.createDAO(this); 
+    }
+    
+    public static int getNextId(Connection conn) {
+    	LessonSessionDAO sessionDAO = new LessonSessionDAO(conn);
+        return sessionDAO.getNextIdDAO(); 
+    }
+
+    public boolean update(Connection conn) {
+    	LessonSessionDAO sessionDAO = new LessonSessionDAO(conn);
+        return sessionDAO.updateDAO(this);
+    }
+
+    public boolean delete(Connection conn) {
+    	LessonSessionDAO sessionDAO = new LessonSessionDAO(conn);
+        return sessionDAO.deleteDAO(this);
+    }
+
+    public static LessonSession find(int id, Connection conn) {
+    	LessonSessionDAO sessionDAO = new LessonSessionDAO(conn);
+        return sessionDAO.findDAO(id);
+    }
+    
+	public static List<LessonSession> findAll(Connection conn) {
+		LessonSessionDAO sessionDAO = new LessonSessionDAO(conn);
+		return sessionDAO.findAllDAO();
+	}
+
+    @Override
+    public String toString() {
+        return id_session + " - " + sessionType;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(id_session);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true; 
+        if (obj == null || getClass() != obj.getClass()) return false; 
+
+        LessonSession that = (LessonSession) obj;
+        return getId() == that.getId(); 
     }
 }
