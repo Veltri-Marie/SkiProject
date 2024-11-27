@@ -130,6 +130,16 @@ public class Lesson {
         LessonDAO lessonDAO = new LessonDAO(conn);
         return lessonDAO.getNextIdDAO();
     }
+    
+    public static Lesson find(int id, Connection conn) {
+        LessonDAO lessonDAO = new LessonDAO(conn);
+        return lessonDAO.findDAO(id);
+    }
+
+    public static List<Lesson> findAll(Connection conn) {
+        LessonDAO lessonDAO = new LessonDAO(conn);
+        return lessonDAO.findAllDAO();
+    }
 
 
     public void addBooking(Booking booking) {
