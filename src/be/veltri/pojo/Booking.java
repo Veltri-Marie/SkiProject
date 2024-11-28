@@ -107,6 +107,10 @@ public class Booking {
         return bookingDAO.getNextIdDAO(); 
     }
 
+    public static List<Booking> findAll(Connection conn) {
+    	BookingDAO bookingDAO = new BookingDAO(conn);
+        return bookingDAO.findAllDAO();
+    }
     
     public double calculatePrice() {
         double price = 0.0;

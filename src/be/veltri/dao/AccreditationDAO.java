@@ -1,21 +1,16 @@
 package be.veltri.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import be.veltri.pojo.Accreditation;
+import be.veltri.pojo.Instructor;
+import be.veltri.pojo.LessonType;
+
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.chrono.IsoEra;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.util.ArrayList;
-import java.util.List;
-
-import be.veltri.pojo.Accreditation;
-import be.veltri.pojo.Instructor;
-import be.veltri.pojo.LessonType;
+import java.util.*;
 
 public class AccreditationDAO extends DAO<Accreditation>{
 
@@ -23,19 +18,68 @@ public class AccreditationDAO extends DAO<Accreditation>{
     	super(conn);
     }
     
-    public boolean createDAO(Accreditation obj)
-	{
-		return false;
-	}
+    public int getNextIdDAO() {
+        String idSql = "SELECT accreditation_seq.NEXTVAL FROM DUAL";
+        try (PreparedStatement idPstmt = this.connect.prepareStatement(idSql);
+             ResultSet rs = idPstmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1; 
+    }
     
-    public boolean deleteDAO(Accreditation obj)
-	{
-		return false;
-	}
-    
-    public boolean updateDAO(Accreditation obj)
-    {
-    	return false;
+    @Override
+    public boolean createDAO(Accreditation accreditation) {
+        String sql = "INSERT INTO Accreditation (id_accreditation, accreditation_name) VALUES (?, ?)";
+
+        try (PreparedStatement pstmt = this.connect.prepareStatement(sql)) {
+        	pstmt.setInt(1, accreditation.getId());
+            pstmt.setString(2, accreditation.getName());
+
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0; 
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false; 
+    }
+
+    @Override
+    public boolean deleteDAO(Accreditation accreditation) {
+        String sql = "DELETE FROM Accreditation WHERE id_accreditation = ?";
+        try (PreparedStatement pstmt = this.connect.prepareStatement(
+                sql, 
+                ResultSet.TYPE_SCROLL_INSENSITIVE, 
+                ResultSet.CONCUR_UPDATABLE)) { 
+
+            pstmt.setInt(1, accreditation.getId());
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean updateDAO(Accreditation accreditation) {
+        String sql = "UPDATE Accreditation SET accreditation_name = ? WHERE id_accreditation = ?";
+        try (PreparedStatement pstmt = this.connect.prepareStatement(
+                sql, 
+                ResultSet.TYPE_SCROLL_INSENSITIVE, 
+                ResultSet.CONCUR_UPDATABLE)) { 
+
+        	pstmt.setString(1, accreditation.getName());
+        	pstmt.setInt(2, accreditation.getId());
+        	return pstmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
@@ -167,8 +211,8 @@ public class AccreditationDAO extends DAO<Accreditation>{
         }
         return accreditations;
     }
-	
-	private Accreditation setAccreditationDAO(ResultSet rs) throws SQLException {
+    
+    private Accreditation setAccreditationDAO(ResultSet rs) throws SQLException {
         Accreditation accreditation = new Accreditation(
             rs.getInt("id_accreditation"),
             rs.getString("accreditation_name")
@@ -179,7 +223,7 @@ public class AccreditationDAO extends DAO<Accreditation>{
             String[] lessonTypeEntries = lessonTypeList.split(",");
             for (String entry : lessonTypeEntries) {
                 String[] parts = entry.split(":");
-                if (parts.length == 3) { // Ensure we have all required fields
+                if (parts.length == 3) {
                     int lessonTypeId = Integer.parseInt(parts[0].trim());
                     String lessonLevel = parts[1].trim();
                     double lessonPrice = Double.parseDouble(parts[2].trim());
