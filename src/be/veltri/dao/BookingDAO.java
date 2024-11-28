@@ -18,6 +18,7 @@ public class BookingDAO extends DAO<Booking> {
         super(conn);
     }
     
+	@Override
     public int getNextIdDAO() {
         String idSql = "SELECT booking_seq.NEXTVAL FROM DUAL";
         try (PreparedStatement idPstmt = this.connect.prepareStatement(idSql);
@@ -53,20 +54,94 @@ public class BookingDAO extends DAO<Booking> {
         return false; 
     }
 
-    
-    public boolean deleteDAO(Booking obj)
-	{
-		return false;
-	}
-    
-    public boolean updateDAO(Booking obj)
-    {
-    	return false;
+	@Override
+    public boolean deleteDAO(Booking booking) {
+        String deleteLessonSessionsSql = "DELETE FROM LessonSession WHERE id_booking = ?";
+        String deleteBookingSql = "DELETE FROM Booking WHERE id_booking = ?";
+
+        try (
+            PreparedStatement pstmtLessonSessions = this.connect.prepareStatement(deleteLessonSessionsSql);
+            PreparedStatement pstmtBooking = this.connect.prepareStatement(deleteBookingSql)
+        ) {
+            pstmtLessonSessions.setInt(1, booking.getId());
+            pstmtLessonSessions.executeUpdate();
+
+            pstmtBooking.setInt(1, booking.getId());
+            return pstmtBooking.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
-	public Booking findDAO(int id)
-    {
-		return null;
+	@Override
+    public boolean updateDAO(Booking booking) {
+    	String sql = "UPDATE Booking SET insurance_opt = ?, reservation_date = ?, id_lesson = ?, id_period = ?, id_skier = ? " +
+                "WHERE id_booking = ?";
+
+        try (PreparedStatement pstmt = this.connect.prepareStatement(
+        		sql,
+        		ResultSet.TYPE_SCROLL_INSENSITIVE, 
+                ResultSet.CONCUR_UPDATABLE)) { 
+        	pstmt.setBoolean(1, booking.getInsuranceOpt());
+            pstmt.setDate(2, Date.valueOf(booking.getReservationDate()));
+            pstmt.setInt(3, booking.getLesson().getId());
+            pstmt.setInt(4, booking.getPeriod().getId());
+            pstmt.setInt(5, booking.getSkier().getId());
+            pstmt.setInt(6, booking.getId());  
+
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false; 
+    }
+
+	@Override
+    public Booking findDAO(int id) {
+    	String sql = """
+    		    SELECT B.id_booking, B.insurance_opt, B.reservation_date,
+                   S.id_skier, P1.firstName AS skierFirstName, P1.lastName AS skierLastName, P1.Birthdate AS skierBirthdate, S.skier_phoneNumber, S.skier_email,
+                   I.id_instructor, P2.firstName AS instructorFirstName, P2.lastName AS instructorLastName, P2.Birthdate AS instructorBirthdate, I.instructor_hireDate,
+                   L.id_lesson, L.lessonDate, L.minBookings, L.maxBookings, L.nb_hours, L.isCollective,
+                   LT.id_lessonType, LT.lesson_level, LT.lesson_price, LT.id_accreditation AS ltAccreditationId, LT_A.accreditation_name AS ltAccreditationName,
+                   P.id_period, P.startDate, P.endDate, P.isVacation, 
+                   LISTAGG(A.accreditation_name || ':' || A.id_accreditation, ', ') WITHIN GROUP (ORDER BY A.id_accreditation) AS instructorAccreditations, 
+                   LISTAGG(LS.id_session_ || ':' || LS.session_type, ',') WITHIN GROUP (ORDER BY LS.id_session_) AS lessonSession_list
+            FROM Booking B
+            INNER JOIN Skier S ON B.id_skier = S.id_skier
+            INNER JOIN Person P1 ON S.id_Person = P1.id_Person
+            INNER JOIN Period P ON B.id_period = P.id_period
+            INNER JOIN Lesson L ON B.id_lesson = L.id_lesson
+            INNER JOIN Instructor I ON L.id_instructor = I.id_instructor
+            INNER JOIN Person P2 ON I.id_Person = P2.id_Person
+            LEFT JOIN LessonType LT ON L.id_lessonType = LT.id_lessonType
+            LEFT JOIN Accreditation LT_A ON LT.id_accreditation = LT_A.id_accreditation
+            LEFT JOIN InstructorAccreditation IA ON I.id_instructor = IA.id_instructor
+            LEFT JOIN Accreditation A ON IA.id_accreditation = A.id_accreditation
+            LEFT JOIN LessonSession LS ON LS.id_booking = B.id_booking
+            WHERE B.id_booking = ?
+            GROUP BY B.id_booking, B.insurance_opt, B.reservation_date,
+                     S.id_skier, P1.firstName, P1.lastName, P1.Birthdate, S.skier_phoneNumber, S.skier_email,
+                     I.id_instructor, P2.firstName, P2.lastName, P2.Birthdate, I.instructor_hireDate,
+                     L.id_lesson, L.lessonDate, L.minBookings, L.maxBookings, L.nb_hours, L.isCollective,
+                     LT.id_lessonType, LT.lesson_level, LT.lesson_price, LT.id_accreditation, LT_A.accreditation_name,
+                     P.id_period, P.startDate, P.endDate, P.isVacation
+    		""";
+
+        
+        Booking booking = null;
+        try (PreparedStatement pstmt = this.connect.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                	booking = setBookingDAO(rs);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return booking; 
     }
     
 	@Override
@@ -215,7 +290,9 @@ public class BookingDAO extends DAO<Booking> {
                             sessionType,
                             booking 
                         );
-                        booking.addLessonSession(lessonSession);
+						if (! booking.getLessonSessions().contains(lessonSession)) {
+							booking.addLessonSession(lessonSession);
+						}
                 }
             }
         }
