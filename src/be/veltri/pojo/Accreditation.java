@@ -1,14 +1,13 @@
 package be.veltri.pojo;
 
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import be.veltri.dao.AccreditationDAO;
+import be.veltri.dao.BookingDAO;
 
 public class Accreditation {
-	// ATTRIBUTES
+    // ATTRIBUTES
     private List<Instructor> instructors;    
     private List<LessonType> lessonTypes;     
     private String name;     
@@ -75,13 +74,27 @@ public class Accreditation {
     public void setLessonTypes(List<LessonType> lessonTypes) {
         this.lessonTypes = lessonTypes; 
     }
-    
-    public void addLessonType(int id_LessonType, String level, double price)
-    {
-        new LessonType(id_LessonType, level, price, this);
+
+    //METHODS
+    public boolean create(Connection conn) {
+    	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+        return accreditationDAO.createDAO(this); 
     }
     
-    //METHODS
+    public static int getNextId(Connection conn) {
+    	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+        return accreditationDAO.getNextIdDAO(); 
+    }
+
+    public boolean update(Connection conn) {
+    	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+        return accreditationDAO.updateDAO(this);
+    }
+
+    public boolean delete(Connection conn) {
+    	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+        return accreditationDAO.deleteDAO(this);
+    }
 
     public static Accreditation find(int id, Connection conn) {
     	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
@@ -97,6 +110,21 @@ public class Accreditation {
         AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
         return accreditationDAO.findByInstructorDAO(instructor);
     }
+
+    
+    public void addInstructor(Instructor instructor) {
+    	if (this.instructors == null) {
+			this.instructors = new ArrayList<>();
+    	}
+        if (instructor != null && !instructors.contains(instructor)) {
+            instructors.add(instructor); 
+        }
+    }
+    
+    public void addLessonType(int id_LessonType, String level, double price)
+    {
+        new LessonType(id_LessonType, level, price, this);
+    }
     
     public void addLessonType(LessonType lessonType) {
     	if (this.lessonTypes == null) {
@@ -111,15 +139,7 @@ public class Accreditation {
             lessonType.setAccreditation(this); 
         }
     }
-    
-    public void addInstructor(Instructor instructor) {
-    	if (this.instructors == null) {
-			this.instructors = new ArrayList<>();
-    	}
-        if (instructor != null && !instructors.contains(instructor)) {
-            instructors.add(instructor); 
-        }
-    }
+
     
     @Override
     public String toString() {

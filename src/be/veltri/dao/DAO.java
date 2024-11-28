@@ -10,6 +10,7 @@ public abstract class DAO<T> {
         this.connect = conn;
     }
 
+    public abstract int getNextIdDAO();
     public abstract boolean createDAO(T obj); 
     public abstract boolean deleteDAO(T obj);
     public abstract boolean updateDAO(T obj);
