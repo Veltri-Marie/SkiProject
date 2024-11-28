@@ -94,17 +94,39 @@ public class Booking {
         this.insuranceOpt = insuranceOpt; 
     }
     
-// METHODS
+    public List<LessonSession> getLessonSessions() {
+    	        return lessonSessions;
+    }
+    
+	public void setLessonSessions(List<LessonSession> lessonSessions) {
+		this.lessonSessions = lessonSessions;
+	}
+    
+    // METHODS
+        
+    public static int getNextId(Connection conn) {
+        BookingDAO bookingDAO = new BookingDAO(conn);
+        return bookingDAO.getNextIdDAO(); 
+    }
     
     public boolean create(Connection conn) {
         BookingDAO bookingDAO = new BookingDAO(conn);
         return bookingDAO.createDAO(this); 
     }
-
     
-    public static int getNextId(Connection conn) {
-        BookingDAO bookingDAO = new BookingDAO(conn);
-        return bookingDAO.getNextIdDAO(); 
+    public boolean update(Connection conn) {
+    	BookingDAO bookingDAO = new BookingDAO(conn);
+        return bookingDAO.updateDAO(this);
+    }
+
+    public boolean delete(Connection conn) {
+    	BookingDAO bookingDAO = new BookingDAO(conn);
+        return bookingDAO.deleteDAO(this);
+    }
+
+    public static Booking find(int id, Connection conn) {
+    	BookingDAO bookingDAO = new BookingDAO(conn);
+        return bookingDAO.findDAO(id);
     }
 
     public static List<Booking> findAll(Connection conn) {

@@ -7,6 +7,8 @@ import be.veltri.connection.SkiConnection;
 import be.veltri.pojo.Booking;
 
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.Connection;
 import java.util.List;
 
@@ -16,6 +18,7 @@ public class BookingPanel extends JPanel {
     private static final long serialVersionUID = 1L;
     private JTable tableBooking;
     private DefaultTableModel model;
+    private Booking selectedBooking;
 
 
     private Connection conn = SkiConnection.getInstance();
@@ -59,11 +62,39 @@ public class BookingPanel extends JPanel {
 
         add(panelBookingButtons, BorderLayout.SOUTH);
         
+        tableBooking.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int selectedRow = tableBooking.getSelectedRow();
+                if (selectedRow != -1) {
+                    int bookingId = (int) tableBooking.getValueAt(selectedRow, 0);
+                    selectedBooking = Booking.find(bookingId, conn);
+                }
+            }
+        });
+        
 
     }
 
     private void deleteBooking() {
-        
+        int selectedRow = tableBooking.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a booking to delete.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int bookingId = (int) tableBooking.getValueAt(selectedRow, 0);
+        int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this booking?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+
+        if (response == JOptionPane.YES_OPTION) {
+            Booking booking = Booking.find(bookingId, conn);
+            if (booking != null && booking.delete(conn)) {
+                ((DefaultTableModel) tableBooking.getModel()).removeRow(selectedRow);
+                JOptionPane.showMessageDialog(this, "Booking deleted successfully!");
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to delete booking.");
+            }
+        }
     }
 
     private void loadBookingsFromDB() {

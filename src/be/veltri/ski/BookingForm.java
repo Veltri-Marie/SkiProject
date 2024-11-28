@@ -69,7 +69,7 @@ public class BookingForm extends JDialog {
         lblSessions.setBounds(30, 210, 150, 25);
         getContentPane().add(lblSessions);
 
-        sessionTableModel = new DefaultTableModel(new Object[]{"Day", "Morning", "Afternoon"}, 0) {
+		sessionTableModel = new DefaultTableModel(new Object[]{"Day", "Morning", "Afternoon"}, 0) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -82,7 +82,7 @@ public class BookingForm extends JDialog {
                 return column > 0;
             }
         };
-
+	    
         tableSessions = new JTable(sessionTableModel);
         JScrollPane scrollSessions = new JScrollPane(tableSessions);
         scrollSessions.setBounds(140, 210, 500, 120);
@@ -191,7 +191,7 @@ public class BookingForm extends JDialog {
             if (afternoon) selectedSessions++;
         }
 
-        if (selectedSessions != 6) {
+        if (selectedSessions != 6 && lesson.getIsCollective()) {
             JOptionPane.showMessageDialog(this, "Please select exactly 6 sessions.");
             return;
         }
@@ -293,12 +293,15 @@ public class BookingForm extends JDialog {
     }
     
     private void loadSessionTable() {
-        sessionTableModel.setRowCount(0); 
-
         Lesson selectedLesson = listLessons.getSelectedValue();
-        if (selectedLesson == null) {
+
+        if (selectedLesson == null || !selectedLesson.getIsCollective()) {
+            tableSessions.setVisible(false);
             return;
         }
+
+        tableSessions.setVisible(true);
+        sessionTableModel.setRowCount(0); 
 
         LocalDate lessonDate = selectedLesson.getLessonDate();
         for (int i = 0; i < 6; i++) { 
@@ -306,6 +309,7 @@ public class BookingForm extends JDialog {
             sessionTableModel.addRow(new Object[]{day, false, false});
         }
     }
+
 
 
     public static void main(String[] args) {
