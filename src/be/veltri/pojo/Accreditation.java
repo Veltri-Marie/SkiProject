@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.util.*;
 
 import be.veltri.dao.AccreditationDAO;
-import be.veltri.dao.BookingDAO;
 
 public class Accreditation {
     // ATTRIBUTES
