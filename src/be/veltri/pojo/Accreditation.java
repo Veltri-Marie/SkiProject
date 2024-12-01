@@ -1,6 +1,5 @@
 package be.veltri.pojo;
 
-import java.sql.Connection;
 import java.util.*;
 
 import be.veltri.dao.AccreditationDAO;
@@ -75,38 +74,31 @@ public class Accreditation {
     }
 
     //METHODS
-    public boolean create(Connection conn) {
-    	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+    public boolean create(AccreditationDAO accreditationDAO) {
         return accreditationDAO.createDAO(this); 
     }
     
-    public static int getNextId(Connection conn) {
-    	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+    public static int getNextId(AccreditationDAO accreditationDAO) {
         return accreditationDAO.getNextIdDAO(); 
     }
 
-    public boolean update(Connection conn) {
-    	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+    public boolean update(AccreditationDAO accreditationDAO) {
         return accreditationDAO.updateDAO(this);
     }
 
-    public boolean delete(Connection conn) {
-    	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+    public boolean delete(AccreditationDAO accreditationDAO) {
         return accreditationDAO.deleteDAO(this);
     }
 
-    public static Accreditation find(int id, Connection conn) {
-    	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+    public static Accreditation find(int id, AccreditationDAO accreditationDAO) {
         return accreditationDAO.findDAO(id);
     }
     
-    public static List<Accreditation> findAll(Connection conn) {
-    	AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+    public static List<Accreditation> findAll(AccreditationDAO accreditationDAO) {
         return accreditationDAO.findAllDAO();
     }
     
-    public static List<Accreditation> findByInstructor(Connection conn, Instructor instructor) {
-        AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+    public static List<Accreditation> findByInstructor(AccreditationDAO accreditationDAO, Instructor instructor) {
         return accreditationDAO.findByInstructorDAO(instructor);
     }
 
@@ -130,10 +122,7 @@ public class Accreditation {
 	        this.lessonTypes = new ArrayList<>(); 
 
 		}
-        if (lessonType == null) {
-            throw new IllegalArgumentException("LessonType cannot be null.");
-        }
-        if (!lessonTypes.contains(lessonType)) {
+        if (lessonType != null && !lessonTypes.contains(lessonType)) {
             lessonTypes.add(lessonType);
             lessonType.setAccreditation(this); 
         }

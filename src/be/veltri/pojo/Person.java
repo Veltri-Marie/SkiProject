@@ -70,13 +70,11 @@ public class Person {
         }
 
 
-    // hashCode()
     @Override
     public int hashCode() {
         return Objects.hash(id_person);
     }
 
-    // equals()
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

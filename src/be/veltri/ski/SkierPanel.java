@@ -10,6 +10,7 @@ import java.sql.*;
 import java.time.*;
 import java.util.List;
 import be.veltri.connection.*;
+import be.veltri.dao.SkierDAO;
 import be.veltri.pojo.*;
 
 public class SkierPanel extends JPanel {
@@ -22,6 +23,8 @@ public class SkierPanel extends JPanel {
     private Skier selectedSkier;
 
     private Connection conn = SkiConnection.getInstance();
+    
+    private SkierDAO skieurDAO = new SkierDAO(conn);
 
     public SkierPanel() {
         setLayout(null);
@@ -62,7 +65,7 @@ public class SkierPanel extends JPanel {
                     int selectedRow = table.getSelectedRow();
                     if (selectedRow != -1) {
                         int skierId = (int) tableModel.getValueAt(selectedRow, 0);
-                        selectedSkier = Skier.find(skierId, conn); 
+                        selectedSkier = Skier.find(skierId, skieurDAO); 
                         if (selectedSkier != null) {
                             tfFirstname.setText(selectedSkier.getFirstName());
                             tfLastname.setText(selectedSkier.getLastName());
@@ -169,34 +172,46 @@ public class SkierPanel extends JPanel {
 
     private void addSkier() {
         String firstName = tfFirstname.getText();
+        
         String lastName = tfLastname.getText();
         String phoneNumber = tfPhoneNumber.getText();
         String email = tfEmail.getText();
-        LocalDate birthdate = dateChooser.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(); 
+
+        if (dateChooser.getDate() == null) {
+            JOptionPane.showMessageDialog(SkierPanel.this, "Please enter a valid date.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+		LocalDate birthdate = dateChooser.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
 
         if (!validateSkierFields(firstName, lastName, phoneNumber, email, birthdate)) {
             return;
         }
 
-        int newId = Skier.getNextId(conn);
+        int newId = Skier.getNextId(skieurDAO);
         
         Skier skier = new Skier(newId, firstName, lastName, birthdate, phoneNumber, email);
 
-        skier.create(conn);
-        if (skier.getId() != -1) {
-            JOptionPane.showMessageDialog(SkierPanel.this, "Skier added successfully!");
-            tableModel.addRow(new Object[]{
-                skier.getId(),
-                skier.getLastName(),
-                skier.getFirstName(),
-                skier.getBirthdate(),
-                skier.getPhoneNumber(),
-                skier.getEmail()
-            });
-        } else {
-            JOptionPane.showMessageDialog(SkierPanel.this, "Failed to add skier.");
-        }
+		if (!skier.create(skieurDAO)) {
+			JOptionPane.showMessageDialog(SkierPanel.this, "Failed to add skier.");
+		}
+		else
+		{
+			if (skier.getId() != -1) {
+	            JOptionPane.showMessageDialog(SkierPanel.this, "Skier added successfully!");
+	            tableModel.addRow(new Object[]{
+	                skier.getId(),
+	                skier.getLastName(),
+	                skier.getFirstName(),
+	                skier.getBirthdate(),
+	                skier.getPhoneNumber(),
+	                skier.getEmail()
+	            });
+	        } else {
+	            JOptionPane.showMessageDialog(SkierPanel.this, "Failed to add skier.");
+	        }
+		}
     }
 
 
@@ -219,7 +234,7 @@ public class SkierPanel extends JPanel {
                 selectedSkier.setPhoneNumber(phoneNumber);
                 selectedSkier.setEmail(email);
 
-                if (selectedSkier.update(conn)) {
+                if (selectedSkier.update(skieurDAO)) {
                     JOptionPane.showMessageDialog(SkierPanel.this, "Skier updated successfully!");
                     loadSkiersFromDB();
                 } else {
@@ -236,7 +251,7 @@ public class SkierPanel extends JPanel {
     private void deleteSkier() {
         try {
             if (selectedSkier != null) {
-                if (selectedSkier.delete(SkiConnection.getInstance())) { 
+                if (selectedSkier.delete(skieurDAO)) { 
                     JOptionPane.showMessageDialog(SkierPanel.this, "Skier deleted successfully!");
                     loadSkiersFromDB();
                 } else {
@@ -252,7 +267,7 @@ public class SkierPanel extends JPanel {
 
     private void findSkier() {
         String lastname = tfFindLastName.getText();
-        List<Skier> skiers = Skier.findByLastName(lastname, conn);
+        List<Skier> skiers = Skier.findByLastName(lastname, skieurDAO);
         tableModel.setRowCount(0);
 
         if (skiers.isEmpty()) {
@@ -281,10 +296,16 @@ public class SkierPanel extends JPanel {
     }
     
     private boolean validateSkierFields(String firstName, String lastName, String phoneNumber, String email, LocalDate birthdate) {
+    	
+		if (firstName.isEmpty() || lastName.isEmpty() || phoneNumber.isEmpty() || email.isEmpty()|| birthdate == null) {
+			JOptionPane.showMessageDialog(SkierPanel.this, "All fields are required.");
+			return false;
+		}
+		
         String nameRegex = "^[A-Z][a-zA-Z]*$"; 
         String phoneRegex = "^\\+?[0-9]{10,15}$"; 
         String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$"; 
-
+        
         if (!firstName.matches(nameRegex)) {
             JOptionPane.showMessageDialog(SkierPanel.this, "First name should start with an uppercase letter and contain only letters.");
             return false;
@@ -316,7 +337,7 @@ public class SkierPanel extends JPanel {
     }
 
     private void loadSkiersFromDB() {
-        List<Skier> skiers = Skier.findAll(conn);
+        List<Skier> skiers = Skier.findAll(skieurDAO);
         tableModel.setRowCount(0); 
         for (Skier skier : skiers) {
             tableModel.addRow(new Object[]{skier.getId(), skier.getLastName(), skier.getFirstName(), skier.getBirthdate(), skier.getPhoneNumber(), skier.getEmail()});

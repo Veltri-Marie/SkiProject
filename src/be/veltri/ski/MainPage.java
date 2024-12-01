@@ -61,7 +61,7 @@ public class MainPage extends JFrame {
         
         headerPanel.add(logoPanel, BorderLayout.EAST);
         mainPanel.add(headerPanel, BorderLayout.NORTH);
-
+        
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setBackground(new Color(70, 130, 180)); 
         tabbedPane.setForeground(Color.WHITE);

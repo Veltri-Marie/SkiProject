@@ -11,6 +11,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 public class SkierDAO extends DAO<Skier> {
 
     public SkierDAO(Connection conn) {
@@ -63,8 +65,30 @@ public class SkierDAO extends DAO<Skier> {
             pstmtSkier.setString(3, skier.getEmail());
             pstmtSkier.setInt(4, personId);
 
-            int rowsAffected = pstmtSkier.executeUpdate();
-            return rowsAffected > 0; 
+            try {
+                int rowsAffected = pstmtSkier.executeUpdate();
+                if (rowsAffected == 0) {
+                    JOptionPane.showMessageDialog(null, 
+                        "No rows were affected when adding the instructor. Ensure the data is correct.",
+                        "Insertion Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            } catch (SQLIntegrityConstraintViolationException e) {
+                JOptionPane.showMessageDialog(null, 
+                    "A unique constraint was violated. Ensure the phone number, email, or other unique fields are not duplicated.",
+                    "Unique Constraint Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return false;
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, 
+                    "An unexpected database error occurred: " + e.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+            
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
         }

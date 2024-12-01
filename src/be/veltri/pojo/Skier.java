@@ -1,6 +1,5 @@
 package be.veltri.pojo;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -67,33 +66,27 @@ public class Skier extends Person {
     }
     
  // METHODS
-    public boolean create(Connection conn) {
-        SkierDAO skierDAO = new SkierDAO(conn);
+    public boolean create(SkierDAO skierDAO) {
         return skierDAO.createDAO(this); 
     }
 
-    public static int getNextId(Connection conn) {
-        SkierDAO skierDAO = new SkierDAO(conn);
+    public static int getNextId(SkierDAO skierDAO) {
         return skierDAO.getNextIdDAO(); 
     }
     
-    public boolean update(Connection conn) {
-        SkierDAO skierDAO = new SkierDAO(conn);
+    public boolean update(SkierDAO skierDAO) {
         return skierDAO.updateDAO(this);
     }
     
-    public static Skier find(int id, Connection conn) {
-        SkierDAO skierDAO = new SkierDAO(conn);
+    public static Skier find(int id, SkierDAO skierDAO ) {
         return skierDAO.findDAO(id);
     }
     
-    public boolean delete(Connection conn) {
-        SkierDAO skierDAO = new SkierDAO(conn);
+    public boolean delete(SkierDAO skierDAO) {
         return skierDAO.deleteDAO(this);
     }
 
-    public static List<Skier> findByLastName(String lastname, Connection conn) {
-        SkierDAO skierDAO = new SkierDAO(conn);
+    public static List<Skier> findByLastName(String lastname, SkierDAO skierDAO) {
         try {
             return skierDAO.findByLastnameDAO(lastname);
         } catch (SQLException e) {
@@ -102,8 +95,7 @@ public class Skier extends Person {
         }
     }
 
-    public static List<Skier> findAll(Connection conn) {
-        SkierDAO skierDAO = new SkierDAO(conn);
+    public static List<Skier> findAll(SkierDAO skierDAO) {
         return skierDAO.findAllDAO();
     }
     
@@ -112,9 +104,6 @@ public class Skier extends Person {
         	this.bookings = new ArrayList<>();
         if (booking != null && !bookings.contains(booking)) {
             bookings.add(booking);
-        }
-        else {
-            throw new IllegalArgumentException("Booking cannot be null.");
         }
     }
     

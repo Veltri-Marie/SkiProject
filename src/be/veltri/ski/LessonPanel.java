@@ -4,6 +4,9 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.DefaultTableModel;
 import be.veltri.connection.SkiConnection;
+import be.veltri.dao.InstructorDAO;
+import be.veltri.dao.LessonDAO;
+import be.veltri.dao.LessonTypeDAO;
 import be.veltri.pojo.Accreditation;
 import be.veltri.pojo.Instructor;
 import be.veltri.pojo.Lesson;
@@ -33,6 +36,10 @@ public class LessonPanel extends JPanel {
     private JCheckBox chckbxNewCheckBox;
     
     private Connection conn = SkiConnection.getInstance();
+    private LessonDAO lessonDAO = new LessonDAO(conn);
+    private InstructorDAO instructorDAO = new InstructorDAO(conn);
+    private LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+    
     private JTextField tfNbHours;
 
     public LessonPanel() {
@@ -66,14 +73,14 @@ public class LessonPanel extends JPanel {
         lblMinBooking = new JLabel("Min Booking : ");
         lblMinBooking.setBounds(22, 65, 106, 25);
         panelRegistration.add(lblMinBooking);
-        tfMinBooking = new JTextField();
+        tfMinBooking = new JTextField("0");
         tfMinBooking.setBounds(114, 68, 169, 19);
         panelRegistration.add(tfMinBooking);
         
         lblMaxBooking = new JLabel("Max Booking : ");
         lblMaxBooking.setBounds(22, 100, 106, 25);
         panelRegistration.add(lblMaxBooking);
-        tfMaxBooking = new JTextField();
+        tfMaxBooking = new JTextField("0");
         tfMaxBooking.setBounds(114, 103, 169, 19);
         panelRegistration.add(tfMaxBooking);
 
@@ -176,7 +183,7 @@ public class LessonPanel extends JPanel {
     				int selectedRow = tableLesson.getSelectedRow();
     				if (selectedRow != -1) {
     					int lessonId = (int) tableLesson.getValueAt(selectedRow, 0);
-    					Lesson selectedLesson = Lesson.find(lessonId, conn);
+    					Lesson selectedLesson = Lesson.find(lessonId, lessonDAO);
 
     					if (selectedLesson != null) {
     						dateChooser.setDate(Date.valueOf(selectedLesson.getLessonDate()));
@@ -227,10 +234,17 @@ public class LessonPanel extends JPanel {
     }
 
     private void addLesson() {
-        LocalDate lessonDate = dateChooser.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         int minBookings = Integer.parseInt(tfMinBooking.getText());
         int maxBookings = Integer.parseInt(tfMaxBooking.getText());
 
+        if (dateChooser.getDate() == null) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid date.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        LocalDate lessonDate = dateChooser.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        
         Instructor selectedInstructor = listInstructors.getSelectedValue();
         LessonType selectedLessonType = listLessonTypes.getSelectedValue();
 
@@ -252,10 +266,10 @@ public class LessonPanel extends JPanel {
             return; 
         }
 
-        int newId = Lesson.getNextId(conn);
+        int newId = Lesson.getNextId(lessonDAO);
         Lesson lesson = new Lesson(newId, lessonDate, minBookings, maxBookings, nbHours, isCollective, selectedInstructor, selectedLessonType);
 
-        if (lesson.create(conn)) {
+        if (lesson.create(lessonDAO)) {
             addLessonToTable(lesson);
             JOptionPane.showMessageDialog(this, "Lesson added successfully!");
         } else {
@@ -317,7 +331,7 @@ public class LessonPanel extends JPanel {
             lesson.setInstructor(selectedInstructor);
             lesson.setLessonType(selectedLessonType);
 
-            boolean updated = lesson.update(conn);
+            boolean updated = lesson.update(lessonDAO);
             if (updated) {
                 JOptionPane.showMessageDialog(this, "Lesson updated successfully!");
                 loadLessonsFromDB();
@@ -337,7 +351,7 @@ public class LessonPanel extends JPanel {
             lesson.setId(lessonId);
             int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this lesson?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
             if (response == JOptionPane.YES_OPTION) {
-                boolean deleted = lesson.delete(conn);
+                boolean deleted = lesson.delete(lessonDAO);
                 if (deleted) {
                     ((DefaultTableModel) tableLesson.getModel()).removeRow(selectedRow);
                     JOptionPane.showMessageDialog(this, "Lesson deleted successfully!");
@@ -359,7 +373,7 @@ public class LessonPanel extends JPanel {
         else {
             try {
                 int searchId = Integer.parseInt(searchText); 
-                Lesson lesson = Lesson.find(searchId, conn); 
+                Lesson lesson = Lesson.find(searchId, lessonDAO); 
                 
                 if (lesson != null) {
                     model.addRow(new Object[] {
@@ -382,8 +396,8 @@ public class LessonPanel extends JPanel {
     }
 
     private void clearFields() {
-        tfMinBooking.setText("");
-        tfMaxBooking.setText("");
+        tfMinBooking.setText("0");
+        tfMaxBooking.setText("0");
         listLessonTypes.clearSelection();
         listInstructors.clearSelection();
         chckbxNewCheckBox.setSelected(false);
@@ -396,6 +410,12 @@ public class LessonPanel extends JPanel {
         LocalDate startDate = LocalDate.of(2024, 12, 6);
         LocalDate endDate = LocalDate.of(2025, 5, 3);
 
+        if (lessonDate == null || minBookings == 0 || maxBookings == 0
+                || selectedInstructor == null || selectedLessonType == null) {
+            JOptionPane.showMessageDialog(this, "All fields are required.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
         if (lessonDate.isBefore(startDate) || lessonDate.isAfter(endDate)) {
             JOptionPane.showMessageDialog(this, "The domain is only open between Saturday 06/12/2024 and Sunday 03/05/2025.");
             return false;
@@ -407,7 +427,6 @@ public class LessonPanel extends JPanel {
         }
 
         if (!selectedInstructor.isAvailable(lessonDate)) {
-            System.out.println("Instructor is not available");
             JOptionPane.showMessageDialog(this, "The selected instructor is already booked on this date.");
             return false;
         }
@@ -460,7 +479,7 @@ public class LessonPanel extends JPanel {
     }
     
     private void loadLessonsFromDB() {
-        List<Lesson> lessons = Lesson.findAll(conn);
+        List<Lesson> lessons = Lesson.findAll(lessonDAO);
         DefaultTableModel model = (DefaultTableModel) tableLesson.getModel();
         model.setRowCount(0); 
         for (Lesson lesson : lessons) {
@@ -479,7 +498,7 @@ public class LessonPanel extends JPanel {
         
     private void loadInstructorsFromDB() {
         instructorListModel.clear();
-        List<Instructor> instructors = Instructor.findAll(conn);
+        List<Instructor> instructors = Instructor.findAll(instructorDAO);
         
         for (Instructor instructor : instructors) {
             instructorListModel.addElement(instructor);
@@ -489,7 +508,7 @@ public class LessonPanel extends JPanel {
 
     private void loadLessonTypesFromDB() {
         lessonTypeListModel.clear();
-        List<LessonType> lessonTypes = LessonType.findAll(conn);
+        List<LessonType> lessonTypes = LessonType.findAll(lessonTypeDAO);
         
         for (LessonType lessonType : lessonTypes) {
             lessonTypeListModel.addElement(lessonType);

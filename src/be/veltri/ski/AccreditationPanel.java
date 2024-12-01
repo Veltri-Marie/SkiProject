@@ -8,6 +8,8 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.DefaultTableModel;
 import be.veltri.connection.SkiConnection;
+import be.veltri.dao.AccreditationDAO;
+import be.veltri.dao.InstructorDAO;
 import be.veltri.pojo.Accreditation;
 import be.veltri.pojo.Instructor;
 
@@ -18,13 +20,17 @@ public class AccreditationPanel extends JPanel {
     private JTable tableAccreditation;
     private Instructor currentInstructor;
     private Accreditation selectedAccreditation;
+    
 
     private Connection conn = SkiConnection.getInstance();
+    
+    private AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
+    private InstructorDAO instructorDAO = new InstructorDAO(conn);
 
     private JList<Accreditation> listAccreditations;
 
     public AccreditationPanel(int instructorId) {
-    	currentInstructor = Instructor.find(instructorId, conn);
+    	currentInstructor = Instructor.find(instructorId, instructorDAO);
         setLayout(null);
         initializeComponents();
         loadAccreditationsFromDB();
@@ -105,7 +111,7 @@ public class AccreditationPanel extends JPanel {
                 int selectedRow = tableAccreditation.getSelectedRow();
                 if (selectedRow != -1) {
                     int accreditationId = (int) tableAccreditation.getValueAt(selectedRow, 0);
-                    selectedAccreditation = Accreditation.find(accreditationId, conn);
+                    selectedAccreditation = Accreditation.find(accreditationId, accreditationDAO);
 
                     if (selectedAccreditation != null) {
                         listAccreditations.setSelectedValue(selectedAccreditation, true);
@@ -119,7 +125,7 @@ public class AccreditationPanel extends JPanel {
         Accreditation selectedAccreditation = listAccreditations.getSelectedValue();
         
         if (selectedAccreditation != null) {
-            currentInstructor.addAccreditation(conn, selectedAccreditation);
+            currentInstructor.addAccreditation(instructorDAO, selectedAccreditation);
 
 
                 addAccreditationsToTable();
@@ -140,7 +146,7 @@ public class AccreditationPanel extends JPanel {
         Integer accreditationId = (Integer) tableAccreditation.getValueAt(selectedRow, 0);  
 
         if (accreditationId != null) {
-            Accreditation selectedAccreditation = Accreditation.find(accreditationId, conn);  
+            Accreditation selectedAccreditation = Accreditation.find(accreditationId, accreditationDAO);  
 
 
                 if (currentInstructor != null) {
@@ -148,7 +154,7 @@ public class AccreditationPanel extends JPanel {
                             "Confirm Deletion", JOptionPane.YES_NO_OPTION);
                     
                     if (response == JOptionPane.YES_OPTION) {
-                        boolean deleted = currentInstructor.removeAccreditation(conn, selectedAccreditation);
+                        boolean deleted = currentInstructor.removeAccreditation(instructorDAO, selectedAccreditation);
 
                         if (deleted) {
                             ((DefaultTableModel) tableAccreditation.getModel()).removeRow(selectedRow);
@@ -169,7 +175,7 @@ public class AccreditationPanel extends JPanel {
     
     private void loadAccreditationsFromDB() {
         accreditationListModel.clear();
-        List<Accreditation> accreditations = Accreditation.findAll(conn);
+        List<Accreditation> accreditations = Accreditation.findAll(accreditationDAO);
 
         for (Accreditation accreditation : accreditations) {
             accreditationListModel.addElement(accreditation);
@@ -177,7 +183,7 @@ public class AccreditationPanel extends JPanel {
     }
 
     private void addAccreditationsToTable() {
-        List<Accreditation> accreditations = Accreditation.findByInstructor(conn, currentInstructor);
+        List<Accreditation> accreditations = Accreditation.findByInstructor(accreditationDAO, currentInstructor);
         DefaultTableModel model = (DefaultTableModel) tableAccreditation.getModel();
 
         if (model != null) {

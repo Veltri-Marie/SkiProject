@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
 import be.veltri.connection.SkiConnection;
+import be.veltri.dao.BookingDAO;
 import be.veltri.pojo.Booking;
 
 import java.awt.*;
@@ -19,6 +20,7 @@ public class BookingPanel extends JPanel {
     private JTable tableBooking;
     private DefaultTableModel model;
     private Connection conn = SkiConnection.getInstance();
+    private BookingDAO bookingDAO = new BookingDAO(conn);
 
     public BookingPanel() {
         setLayout(new BorderLayout());
@@ -47,10 +49,7 @@ public class BookingPanel extends JPanel {
         JButton btnAddBooking = new JButton("Add Booking");
         JButton btnDeleteBooking = new JButton("Delete Booking");
 
-        btnAddBooking.addActionListener(e -> {
-            System.out.println("Add Booking button clicked");
-            new BookingForm();
-        });
+        btnAddBooking.addActionListener(e -> new BookingForm());
 
         btnDeleteBooking.addActionListener(e -> deleteBooking());
 
@@ -65,7 +64,7 @@ public class BookingPanel extends JPanel {
                 int selectedRow = tableBooking.getSelectedRow();
                 if (selectedRow != -1) {
                     int bookingId = (int) tableBooking.getValueAt(selectedRow, 0);
-                    Booking.find(bookingId, conn);
+                    Booking.find(bookingId, bookingDAO);
                 }
             }
         });
@@ -84,8 +83,8 @@ public class BookingPanel extends JPanel {
         int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this booking?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
 
         if (response == JOptionPane.YES_OPTION) {
-            Booking booking = Booking.find(bookingId, conn);
-            if (booking != null && booking.delete(conn)) {
+            Booking booking = Booking.find(bookingId, bookingDAO);
+            if (booking != null && booking.delete(bookingDAO)) {
                 ((DefaultTableModel) tableBooking.getModel()).removeRow(selectedRow);
                 JOptionPane.showMessageDialog(this, "Booking deleted successfully!");
             } else {
@@ -95,7 +94,7 @@ public class BookingPanel extends JPanel {
     }
 
     private void loadBookingsFromDB() {
-        List<Booking> bookings = Booking.findAll(conn);
+        List<Booking> bookings = Booking.findAll(bookingDAO);
         DefaultTableModel model = (DefaultTableModel) tableBooking.getModel();
         model.setRowCount(0);
 

@@ -9,6 +9,10 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
 import be.veltri.connection.SkiConnection;
+import be.veltri.dao.BookingDAO;
+import be.veltri.dao.LessonDAO;
+import be.veltri.dao.PeriodDAO;
+import be.veltri.dao.SkierDAO;
 import be.veltri.pojo.Accreditation;
 import be.veltri.pojo.Booking;
 import be.veltri.pojo.Instructor;
@@ -31,6 +35,11 @@ public class BookingForm extends JDialog {
     
 
     private Connection conn = SkiConnection.getInstance();
+    
+    private BookingDAO bookingDAO = new BookingDAO(conn);
+    private PeriodDAO periodDAO = new PeriodDAO(conn);
+    private SkierDAO skierDAO = new SkierDAO(conn);
+    private LessonDAO lessonDAO = new LessonDAO(conn);
 
     public BookingForm() {
         setTitle("New Booking");
@@ -156,7 +165,7 @@ public class BookingForm extends JDialog {
         }
 
         Instructor instructor = lesson.getInstructor();
-        Period period = Period.findByDate(lesson.getLessonDate(), conn);
+        Period period = Period.findByDate(lesson.getLessonDate(), periodDAO);
         if (period == null) {
             JOptionPane.showMessageDialog(this, "No period found for the lesson date.");
             return;
@@ -196,10 +205,10 @@ public class BookingForm extends JDialog {
             return;
         }
 
-        int nextBookingId = Booking.getNextId(conn);
+        int nextBookingId = Booking.getNextId(bookingDAO);
         if (nextBookingId != -1) {            
             Booking booking = new Booking(nextBookingId, LocalDate.now(ZoneId.systemDefault()), lesson, instructor, period, skier, chckbxNewCheckBox.isSelected());
-            booking.create(conn);
+            booking.create(bookingDAO);
             
 
             for (int i = 0; i < sessionTableModel.getRowCount(); i++) {
@@ -231,15 +240,12 @@ public class BookingForm extends JDialog {
                 booking
             );
 
-            if (lessonSession.create(conn)) { 
-                System.out.println("Session saved successfully with ID: " + newId);
-            } else {
-                System.err.println("Failed to save the session.");
+            if (!lessonSession.create(conn)) {
+                JOptionPane.showMessageDialog(this, "Failed to add session for booking.", "Error", JOptionPane.ERROR_MESSAGE);
             }
-        } else {
-            System.err.println("Failed to generate a new ID for the session.");
         }
     }
+
 
 
 
@@ -278,7 +284,7 @@ public class BookingForm extends JDialog {
 
     private void loadSkiersFromDB() {
         skierListModel.clear();
-        List<Skier> skiers = Skier.findAll(conn);
+        List<Skier> skiers = Skier.findAll(skierDAO);
         for (Skier skier : skiers) {
             skierListModel.addElement(skier);
         }
@@ -286,7 +292,7 @@ public class BookingForm extends JDialog {
 
     private void loadLessonsFromDB() {
         lessonListModel.clear();
-        List<Lesson> lessons = Lesson.findAll(conn);
+        List<Lesson> lessons = Lesson.findAll(lessonDAO);
         for (Lesson lesson : lessons) {
             lessonListModel.addElement(lesson);
         }

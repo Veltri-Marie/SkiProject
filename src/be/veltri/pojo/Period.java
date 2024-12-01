@@ -1,6 +1,5 @@
 package be.veltri.pojo;
 
-import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +17,9 @@ public class Period {
 
     // CONSTRUCTOR
     public Period() {
-    	if (bookings == null) 
-    	{
-    		this.bookings = new ArrayList<>();
-    	}
+    	if (bookings == null) {
+			this.bookings = new ArrayList<>();
+		}
     	
     }
 
@@ -96,39 +94,32 @@ public class Period {
     }
     
  // METHODS
-    public boolean create(Connection conn) {
-    	PeriodDAO periodDAO = new PeriodDAO(conn);
+    public boolean create(PeriodDAO periodDAO) {
         return periodDAO.createDAO(this); 
     }
     
-    public static int getNextId(Connection conn) {
-    	PeriodDAO periodDAO = new PeriodDAO(conn);
+    public static int getNextId(PeriodDAO periodDAO) {
         return periodDAO.getNextIdDAO(); 
     }
     
-    public boolean update(Connection conn) {
-    	PeriodDAO periodDAO = new PeriodDAO(conn);
+    public boolean update(PeriodDAO periodDAO) {
         return periodDAO.updateDAO(this);
     }
 
-    public boolean delete(Connection conn) {
-    	PeriodDAO periodDAO = new PeriodDAO(conn);
+    public boolean delete(PeriodDAO periodDAO) {
         return periodDAO.deleteDAO(this);
     }
 
-    public static Period find(int id, Connection conn) {
-    	PeriodDAO periodDAO = new PeriodDAO(conn);
+    public static Period find(int id, PeriodDAO periodDAO) {
         return periodDAO.findDAO(id);
     }
     
-	public static Period findByDate(LocalDate date, Connection conn) {
-		PeriodDAO periodDAO = new PeriodDAO(conn);
+	public static Period findByDate(LocalDate date, PeriodDAO periodDAO) {
 		return periodDAO.findByDateDAO(date);
 	}
 
 
-    public static List<Period> findAll(Connection conn) {
-    	PeriodDAO periodDAO = new PeriodDAO(conn);
+    public static List<Period> findAll(PeriodDAO periodDAO) {
         return periodDAO.findAllDAO();
     }
 
@@ -143,8 +134,6 @@ public class Period {
     	}
         if (booking != null) {
             bookings.add(booking);
-        } else {
-            throw new IllegalArgumentException("Booking cannot be null.");
         }
     }
     @Override

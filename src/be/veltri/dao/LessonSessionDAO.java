@@ -124,11 +124,16 @@ public class LessonSessionDAO extends DAO<LessonSession> {
     }
 
     private LessonSession setLessonSessionDAO(ResultSet rs) throws SQLException {
-        
-        Lesson lesson = Lesson.find(rs.getInt("id_lesson"), this.connect);
-        Instructor instructor = Instructor.find(rs.getInt("id_instructor"), this.connect);
-        Period period = Period.find(rs.getInt("id_period"), this.connect);
-        Skier skier = Skier.find(rs.getInt("id_skier"), this.connect);
+    	
+    	LessonDAO lessonDAO = new LessonDAO(this.connect);
+    	InstructorDAO instructorDAO = new InstructorDAO(this.connect);
+    	PeriodDAO periodDAO = new PeriodDAO(this.connect);
+    	SkierDAO skierDAO = new SkierDAO(this.connect);
+    	
+        Lesson lesson = Lesson.find(rs.getInt("id_lesson"), lessonDAO);
+        Instructor instructor = Instructor.find(rs.getInt("id_instructor"), instructorDAO);
+        Period period = Period.find(rs.getInt("id_period"), periodDAO);
+        Skier skier = Skier.find(rs.getInt("id_skier"), skierDAO);
         
         
         Booking booking = new Booking(

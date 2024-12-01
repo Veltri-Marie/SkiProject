@@ -1,6 +1,5 @@
 package be.veltri.pojo;
 
-import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -76,38 +75,31 @@ public class Instructor extends Person {
     }
 
     // METHODS
-    public boolean create(Connection conn) {
-        InstructorDAO instructorDAO = new InstructorDAO(conn);
+    public boolean create(InstructorDAO instructorDAO) {
         return instructorDAO.createDAO(this); 
     }
     
-    public static int getNextId(Connection conn) {
-        InstructorDAO instructorDAO = new InstructorDAO(conn);
+    public static int getNextId(InstructorDAO instructorDAO) {
         return instructorDAO.getNextIdDAO(); 
     }
     
-    public boolean update(Connection conn) {
-        InstructorDAO instructorDAO = new InstructorDAO(conn);
+    public boolean update(InstructorDAO instructorDAO) {
         return instructorDAO.updateDAO(this);
     }
     
-    public boolean delete(Connection conn) {
-        InstructorDAO instructorDAO = new InstructorDAO(conn);
+    public boolean delete(InstructorDAO instructorDAO) {
         return instructorDAO.deleteDAO(this);
     }
     
-    public static Instructor find(int id, Connection conn) {
-        InstructorDAO instructorDAO = new InstructorDAO(conn);
+    public static Instructor find(int id, InstructorDAO instructorDAO) {
         return instructorDAO.findDAO(id);
     }
 
-    public static List<Instructor> findByLastName(Connection conn, String lastname) {
-        InstructorDAO instructorDAO = new InstructorDAO(conn);
+    public static List<Instructor> findByLastName(InstructorDAO instructorDAO, String lastname) {
         return instructorDAO.findByLastnameDAO(lastname);
     }
 
-    public static List<Instructor> findAll(Connection conn) {
-        InstructorDAO instructorDAO = new InstructorDAO(conn);
+    public static List<Instructor> findAll(InstructorDAO instructorDAO) {
         return instructorDAO.findAllDAO();
     }
     
@@ -121,20 +113,18 @@ public class Instructor extends Person {
         return true; 
     }
     
-    public void addAccreditation(Connection conn, Accreditation accreditation) {
+    public void addAccreditation(InstructorDAO instructorDAO, Accreditation accreditation) {
 		
         if (accreditation != null && !accreditations.contains(accreditation)) {
             accreditations.add(accreditation);
-            InstructorDAO instructorDAO = new InstructorDAO(conn);
             instructorDAO.addAccreditationDAO(this, accreditation);
         }
     }
     
-    public boolean removeAccreditation(Connection conn, Accreditation accreditation) 
+    public boolean removeAccreditation(InstructorDAO instructorDAO, Accreditation accreditation) 
     {
     	if (accreditation != null && accreditations.contains(accreditation)) {
             accreditations.remove(accreditation);        
-            InstructorDAO instructorDAO = new InstructorDAO(conn);
            
             return instructorDAO.removeAccreditationDAO(this, accreditation);
         } 
@@ -148,10 +138,7 @@ public class Instructor extends Person {
 		}
         if (accreditation != null && !accreditations.contains(accreditation)) {
             accreditations.add(accreditation);
-        }
-        else
-        {
-            throw new IllegalArgumentException("Accreditation cannot be null or already exists.");
+            accreditation.addInstructor(this);
         }
     }
 
@@ -162,10 +149,6 @@ public class Instructor extends Person {
         if (booking != null && !bookings.contains(booking)) {
             bookings.add(booking);
         }
-        else
-        {
-            throw new IllegalArgumentException("Booking cannot be null or already exists.");
-        }
         
     }
 
@@ -175,10 +158,6 @@ public class Instructor extends Person {
 		}
         if (lesson != null && !lessons.contains(lesson)) {
             lessons.add(lesson);
-        }
-        else
-        {
-            throw new IllegalArgumentException("Lesson cannot be null or already exists.");
         }
     }
     

@@ -1,6 +1,5 @@
 package be.veltri.pojo;
 
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +35,8 @@ public class LessonType {
 	        this.id_LessonType = id_LessonType;
 	        this.level = level;
 	        this.price = price;
-	        this.accreditation = accreditation;        
+	        this.accreditation = accreditation;  
+	        accreditation.addLessonType(this);
 	    }
 
 	    // PROPERTIES
@@ -97,34 +97,28 @@ public class LessonType {
 	    }
 	    
 	    // METHODS
-	    public boolean create(Connection conn) {
-	        LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+	    public boolean create(LessonTypeDAO lessonTypeDAO) {
 	        return lessonTypeDAO.createDAO(this); 
 	    }
 	    
-	    public static int getNextId(Connection conn) {
-	        LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+	    public static int getNextId(LessonTypeDAO lessonTypeDAO) {
 	        return lessonTypeDAO.getNextIdDAO(); 
 	    }
 
-	    public boolean update(Connection conn) {
-	    	LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+	    public boolean update(LessonTypeDAO lessonTypeDAO) {
 	        return lessonTypeDAO.updateDAO(this);
 	    }
 
-	    public boolean delete(Connection conn) {
-	    	LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+	    public boolean delete(LessonTypeDAO lessonTypeDAO) {
 	        return lessonTypeDAO.deleteDAO(this);
 	    }
 
-	    public static LessonType find(int id, Connection conn) {
-	    	LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+	    public static LessonType find(int id, LessonTypeDAO lessonTypeDAO) {
 	        return lessonTypeDAO.findDAO(id);
 	    }
 	    
 
-	    public static List<LessonType> findAll(Connection conn) {
-	    	LessonTypeDAO lessonTypeDAO = new LessonTypeDAO(conn);
+	    public static List<LessonType> findAll(LessonTypeDAO lessonTypeDAO) {
 	        return lessonTypeDAO.findAllDAO();
 	    }
 	    
@@ -133,9 +127,7 @@ public class LessonType {
 	    		lessons = new ArrayList<>();
 	        if (lesson != null) {
 	            lessons.add(lesson);
-	        } else {
-	            throw new IllegalArgumentException("Lesson cannot be null.");
-	        }
+	        } 
 	    }
 
 	    @Override

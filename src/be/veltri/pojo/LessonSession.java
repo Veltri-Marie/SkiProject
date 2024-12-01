@@ -21,6 +21,7 @@ public class LessonSession {
         this.id_session = id_Session;
         this.sessionType = sessionType;
         this.booking = booking;
+        booking.addLessonSession(this);
     }
     
     // PROPERTIES
@@ -79,6 +80,7 @@ public class LessonSession {
 		return sessionDAO.findAllDAO();
 	}
 
+	
     @Override
     public String toString() {
         return id_session + " - " + sessionType;

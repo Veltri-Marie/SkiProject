@@ -1,6 +1,5 @@
 package be.veltri.pojo;
 
-import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +17,13 @@ public class Lesson {
     private boolean isCollective;
     private LessonType lessonType;
     private Instructor instructor;
-    private List<Booking> bookings = new ArrayList<>();
+    private List<Booking> bookings;
 
     // CONSTRUCTORS
     public Lesson() {
+    	if (bookings == null) {
+			this.bookings = new ArrayList<>();
+		}
       }
 
     public Lesson(int id_Lesson, LocalDate lessonDate, int minBookings, int maxBookings, int nb_hours, boolean isCollective, Instructor instructor, LessonType lessonType) {
@@ -40,6 +42,8 @@ public class Lesson {
         this.isCollective = isCollective;
         this.instructor = instructor;
         this.lessonType = lessonType;
+        instructor.addLesson(this);
+        lessonType.addLesson(this);
     }
 
     // PROPERTIES
@@ -121,33 +125,27 @@ public class Lesson {
 	
 	//METHODS
 	
-	public boolean create(Connection conn) {
-        LessonDAO lessonDAO = new LessonDAO(conn);
+	public boolean create(LessonDAO lessonDAO) {
         return lessonDAO.createDAO(this);
     }
 
-    public static int getNextId(Connection conn) {
-        LessonDAO lessonDAO = new LessonDAO(conn);
+    public static int getNextId(LessonDAO lessonDAO) {
         return lessonDAO.getNextIdDAO();
     }
     
-    public boolean delete(Connection conn) {
-        LessonDAO lessonDAO = new LessonDAO(conn);
+    public boolean delete(LessonDAO lessonDAO) {
         return lessonDAO.deleteDAO(this);
     }
     
-    public boolean update(Connection conn) {
-        LessonDAO lessonDAO = new LessonDAO(conn);
+    public boolean update(LessonDAO lessonDAO) {
         return lessonDAO.updateDAO(this);
     }
     
-    public static Lesson find(int id, Connection conn) {
-        LessonDAO lessonDAO = new LessonDAO(conn);
+    public static Lesson find(int id, LessonDAO lessonDAO) {
         return lessonDAO.findDAO(id);
     }
 
-    public static List<Lesson> findAll(Connection conn) {
-        LessonDAO lessonDAO = new LessonDAO(conn);
+    public static List<Lesson> findAll(LessonDAO lessonDAO) {
         return lessonDAO.findAllDAO();
     }
     

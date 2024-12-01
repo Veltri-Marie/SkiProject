@@ -1,6 +1,5 @@
 package be.veltri.pojo;
 
-import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +33,10 @@ public class Booking {
         this.period = period;    
         this.skier = skier;    
         this.insuranceOpt = insuranceOpt;
+        lesson.addBooking(this);
+        instructor.addBooking(this);
+        period.addBooking(this);
+        skier.addBooking(this);
     }
 
     // PROPERTIES
@@ -103,33 +106,27 @@ public class Booking {
 	}
     
     // METHODS
-    public static int getNextId(Connection conn) {
-        BookingDAO bookingDAO = new BookingDAO(conn);
+    public static int getNextId(BookingDAO bookingDAO) {
         return bookingDAO.getNextIdDAO(); 
     }
     
-    public boolean create(Connection conn) {
-        BookingDAO bookingDAO = new BookingDAO(conn);
+    public boolean create(BookingDAO bookingDAO) {
         return bookingDAO.createDAO(this); 
     }
     
-    public boolean update(Connection conn) {
-    	BookingDAO bookingDAO = new BookingDAO(conn);
+    public boolean update(BookingDAO bookingDAO) {
         return bookingDAO.updateDAO(this);
     }
 
-    public boolean delete(Connection conn) {
-    	BookingDAO bookingDAO = new BookingDAO(conn);
+    public boolean delete(BookingDAO bookingDAO) {
         return bookingDAO.deleteDAO(this);
     }
 
-    public static Booking find(int id, Connection conn) {
-    	BookingDAO bookingDAO = new BookingDAO(conn);
+    public static Booking find(int id, BookingDAO bookingDAO) {
         return bookingDAO.findDAO(id);
     }
 
-    public static List<Booking> findAll(Connection conn) {
-    	BookingDAO bookingDAO = new BookingDAO(conn);
+    public static List<Booking> findAll(BookingDAO bookingDAO) {
         return bookingDAO.findAllDAO();
     }
     
@@ -171,11 +168,9 @@ public class Booking {
 		if (lessonSessions == null) {
             lessonSessions = new ArrayList<>();
         }
-		if (lessonSession != null && !lessonSessions.contains(lessonSession)) {
+		if (!lessonSessions.contains(lessonSession)) {
 			lessonSessions.add(lessonSession);
-		} else {
-			throw new IllegalArgumentException("Lesson session cannot be null.");
-		}
+		} 
 	}
     
     @Override
@@ -184,13 +179,11 @@ public class Booking {
                 "id_Booking=" + id_Booking ;
     }
 
-    // hashCode
     @Override
     public int hashCode() {
         return Objects.hash(id_Booking);
     }
 
-    // equals
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true; 

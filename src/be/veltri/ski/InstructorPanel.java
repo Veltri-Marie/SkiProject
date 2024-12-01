@@ -6,6 +6,8 @@ import javax.swing.table.DefaultTableModel;
 import com.toedter.calendar.JDateChooser;
 
 import be.veltri.connection.SkiConnection;
+import be.veltri.dao.AccreditationDAO;
+import be.veltri.dao.InstructorDAO;
 import be.veltri.pojo.Instructor;
 import be.veltri.pojo.Accreditation;
 
@@ -31,6 +33,9 @@ public class InstructorPanel extends JPanel {
     private JButton btnManage;
 
     private Connection conn = SkiConnection.getInstance();
+    
+    private InstructorDAO instructorDAO = new InstructorDAO(conn);
+    private AccreditationDAO accreditationDAO = new AccreditationDAO(conn);
 
     public InstructorPanel() {
         setLayout(null);
@@ -170,7 +175,7 @@ public class InstructorPanel extends JPanel {
                     scrollAccreditations.setVisible(false);
 
                     int instructorId = (int) tableInstructor.getValueAt(selectedRow, 0);
-                    Instructor selectedInstructor = Instructor.find(instructorId, conn);
+                    Instructor selectedInstructor = Instructor.find(instructorId, instructorDAO);
 
                     if (selectedInstructor != null) {
                         tfInstructorFirstName.setText(selectedInstructor.getFirstName());
@@ -227,6 +232,17 @@ public class InstructorPanel extends JPanel {
         Instructor instructor = null;
         String firstName = tfInstructorFirstName.getText();
         String lastName = tfInstructorLastName.getText();
+        
+        if (dateChooserBirthdate.getDate() == null) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid birthdate.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (dateChooserHireDate.getDate() == null) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid hire date.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         LocalDate birthdate = dateChooserBirthdate.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate hireDate = dateChooserHireDate.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         List<Accreditation> selectedAccreditations = listAccreditations.getSelectedValuesList();
@@ -241,12 +257,16 @@ public class InstructorPanel extends JPanel {
             return;  
         }
 
-        int newId = Instructor.getNextId(conn);
+        int newId = Instructor.getNextId(instructorDAO);
         if (newId != -1) {
             for (Accreditation selectedAccreditation : selectedAccreditations) {
                 instructor = new Instructor(newId, firstName, lastName, birthdate, hireDate, selectedAccreditation);
             }
-            instructor.create(conn);
+            if(!instructor.create(instructorDAO))
+            {
+                JOptionPane.showMessageDialog(this, "Failed to add instructor!");
+            }
+            
             addInstructorToTable(instructor);
             JOptionPane.showMessageDialog(this, "Instructor added successfully!");
         } else {
@@ -278,6 +298,11 @@ public class InstructorPanel extends JPanel {
 
     private boolean validateInstructorFields(String firstName, String lastName, LocalDate birthdate, LocalDate hireDate) {
         String nameRegex = "^[A-Z][a-zA-Z]*$"; 
+        
+        if(firstName.isEmpty() || lastName.isEmpty() || birthdate == null || hireDate == null) {
+            JOptionPane.showMessageDialog(this, "Please fill in all fields.");
+            return false;
+        }
 
         if (!firstName.matches(nameRegex)) {
             JOptionPane.showMessageDialog(this, "First name should start with an uppercase letter and contain only letters.");
@@ -303,7 +328,7 @@ public class InstructorPanel extends JPanel {
         return true;  
     }
     
-private void updateInstructor() {
+    private void updateInstructor() {
     	
         int selectedRow = tableInstructor.getSelectedRow();
         if (selectedRow == -1) {
@@ -312,7 +337,7 @@ private void updateInstructor() {
         }
 
         int instructorId = (int) tableInstructor.getValueAt(selectedRow, 0);
-        Instructor instructor = Instructor.find(instructorId, conn);
+        Instructor instructor = Instructor.find(instructorId, instructorDAO);
         String firstName = tfInstructorFirstName.getText();
         String lastName = tfInstructorLastName.getText();
         LocalDate birthdate = dateChooserBirthdate.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -327,7 +352,7 @@ private void updateInstructor() {
         instructor.setBirthdate(birthdate);
         instructor.setHireDate(hireDate);
 
-        boolean updated = instructor.update(conn);
+        boolean updated = instructor.update(instructorDAO);
         if (updated) {
             JOptionPane.showMessageDialog(this, "Instructor updated successfully!");
             loadInstructorsFromDB(); 
@@ -344,11 +369,11 @@ private void updateInstructor() {
 	    }
 	
 	    int instructorId = (int) tableInstructor.getValueAt(selectedRow, 0);
-        Instructor instructor = Instructor.find(instructorId, conn);
+        Instructor instructor = Instructor.find(instructorId, instructorDAO);
 	
 	    int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this instructor?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
 	    if (response == JOptionPane.YES_OPTION) {
-	        boolean deleted = instructor.delete(conn);
+	        boolean deleted = instructor.delete(instructorDAO);
 	        if (deleted) {
 	            ((DefaultTableModel) tableInstructor.getModel()).removeRow(selectedRow);
 	            JOptionPane.showMessageDialog(this, "Instructor deleted successfully!");
@@ -360,7 +385,7 @@ private void updateInstructor() {
     
     private void findInstructor() {
         String lastName = tfSearchInstructorLastName.getText();
-        List<Instructor> instructors = Instructor.findByLastName(conn, lastName);
+        List<Instructor> instructors = Instructor.findByLastName(instructorDAO, lastName);
         DefaultTableModel model = (DefaultTableModel) tableInstructor.getModel();
         model.setRowCount(0);
         
@@ -384,7 +409,7 @@ private void updateInstructor() {
     }
     
     private void loadInstructorsFromDB() {
-        List<Instructor> instructors = Instructor.findAll(conn);      
+        List<Instructor> instructors = Instructor.findAll(instructorDAO);      
         DefaultTableModel model = (DefaultTableModel) tableInstructor.getModel();
         model.setRowCount(0);  
 
@@ -410,7 +435,7 @@ private void updateInstructor() {
     
     private void loadAccreditationsFromDB() {
         accreditationListModel.clear();
-        List<Accreditation> accreditations = Accreditation.findAll(conn);
+        List<Accreditation> accreditations = Accreditation.findAll(accreditationDAO);
         
         for (Accreditation accreditation : accreditations) {
             accreditationListModel.addElement(accreditation);
