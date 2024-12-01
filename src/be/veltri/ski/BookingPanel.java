@@ -18,9 +18,6 @@ public class BookingPanel extends JPanel {
     private static final long serialVersionUID = 1L;
     private JTable tableBooking;
     private DefaultTableModel model;
-    private Booking selectedBooking;
-
-
     private Connection conn = SkiConnection.getInstance();
 
     public BookingPanel() {
@@ -68,7 +65,7 @@ public class BookingPanel extends JPanel {
                 int selectedRow = tableBooking.getSelectedRow();
                 if (selectedRow != -1) {
                     int bookingId = (int) tableBooking.getValueAt(selectedRow, 0);
-                    selectedBooking = Booking.find(bookingId, conn);
+                    Booking.find(bookingId, conn);
                 }
             }
         });

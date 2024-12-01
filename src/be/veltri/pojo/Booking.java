@@ -103,7 +103,6 @@ public class Booking {
 	}
     
     // METHODS
-        
     public static int getNextId(Connection conn) {
         BookingDAO bookingDAO = new BookingDAO(conn);
         return bookingDAO.getNextIdDAO(); 
