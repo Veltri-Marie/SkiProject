@@ -1,0 +1,40 @@
+!SESSION 2024-12-01 18:03:04.180 -----------------------------------------------
+eclipse.buildId=4.32.0.20240606-1231
+java.version=21.0.5
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=fr_FR
+Framework arguments:  -product org.eclipse.epp.package.java.product
+Command-line arguments:  -os win32 -ws win32 -arch x86_64 -product org.eclipse.epp.package.java.product -data C:\_Code\VeltriMarieSkiProject\VeltriSkiProject
+
+!ENTRY ch.qos.logback.classic 1 0 2024-12-01 18:03:06.441
+!MESSAGE Activated before the state location was initialized. Retry after the state location is initialized.
+
+!ENTRY ch.qos.logback.classic 1 0 2024-12-01 18:03:07.716
+!MESSAGE Logback config file: C:\_Code\VeltriMarieSkiProject\VeltriSkiProject\.metadata\.plugins\org.eclipse.m2e.logback\logback.2.6.1.20240411-1122.xml
+
+!ENTRY com.genuitec.copilot4eclipse 1 0 2024-12-01 18:03:13.011
+!MESSAGE [C4E] Copilot API proxy: native mode
+
+!ENTRY org.eclipse.egit.ui 2 0 2024-12-01 18:03:13.717
+!MESSAGE Warning: The environment variable HOME is not set. The following directory will be used to store the Git
+user global configuration and to define the default location to store repositories: 'C:\Users\amich'. If this is
+not correct please set the HOME environment variable and restart Eclipse. Otherwise Git for Windows and
+EGit might behave differently since they see different configuration options.
+This warning can be switched off on the Team > Git > Confirmations and Warnings preference page.
+
+!ENTRY com.genuitec.copilot4eclipse 1 0 2024-12-01 18:03:15.246
+!MESSAGE Starting Copilot4Eclipse
+
+!ENTRY com.genuitec.copilot4eclipse.chat 1 0 2024-12-01 18:03:15.276
+!MESSAGE [Chat} EdgeDataDir: C:\_Code\VeltriMarieSkiProject\VeltriSkiProject\.metadata\.plugins\com.genuitec.copilot4eclipse\edgedata
+
+!ENTRY com.genuitec.copilot4eclipse 2 0 2024-12-01 18:03:17.760
+!MESSAGE Timeout while checking Copilot status
+
+!ENTRY com.genuitec.copilot4eclipse 1 0 2024-12-01 18:03:17.765
+!MESSAGE [C4E] Preconditions Checks(status: ok, results: [Result(
+type: chat_enabled,
+ status: ok,
+ details: [
+
+])])

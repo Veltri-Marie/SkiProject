@@ -441,7 +441,4 @@ public class InstructorPanel extends JPanel {
             accreditationListModel.addElement(accreditation);
         }    
     }
-
-
-
 }
